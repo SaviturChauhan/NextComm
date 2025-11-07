@@ -1,11 +1,12 @@
 {
-  "name": "wireless-qa-backend",
+  "name": "nextcomm-backend",
   "version": "1.0.0",
-  "description": "Backend API for Wireless Q&A Hub",
+  "description": "Backend API for NextComm",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
     "dev": "nodemon server.js",
+    "sync-points": "node scripts/syncPoints.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [

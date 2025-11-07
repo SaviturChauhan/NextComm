@@ -1,7 +1,29 @@
 const express = require('express');
 const User = require('../models/User');
+const Question = require('../models/Question');
+const Answer = require('../models/Answer');
 
 const router = express.Router();
+
+// Get platform statistics
+router.get('/stats', async (req, res) => {
+  try {
+    const [totalUsers, totalQuestions, totalAnswers] = await Promise.all([
+      User.countDocuments({ isActive: true }),
+      Question.countDocuments(),
+      Answer.countDocuments()
+    ]);
+
+    res.json({
+      totalUsers,
+      totalQuestions,
+      totalAnswers
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
 
 // Get leaderboard
 router.get('/', async (req, res) => {

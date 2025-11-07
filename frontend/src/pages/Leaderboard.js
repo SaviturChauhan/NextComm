@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { FiAward, FiUsers, FiMessageSquare, FiClock } from 'react-icons/fi';
 import axios from 'axios';
 
@@ -71,17 +72,24 @@ const Leaderboard = () => {
   };
 
   const getRankIcon = (rank) => {
-    if (rank === 1) return <FiAward className="h-6 w-6 text-yellow-500" />;
-    if (rank === 2) return <FiAward className="h-6 w-6 text-gray-400" />;
-    if (rank === 3) return <FiAward className="h-6 w-6 text-orange-500" />;
+    if (rank === 1) return '🥇';
+    if (rank === 2) return '🥈';
+    if (rank === 3) return '🥉';
     return <span className="text-lg font-bold text-gray-600 dark:text-gray-400">#{rank}</span>;
   };
 
   const getRankColor = (rank) => {
-    if (rank === 1) return 'border-yellow-400 bg-yellow-50 dark:bg-yellow-900/20';
-    if (rank === 2) return 'border-gray-400 bg-gray-50 dark:bg-gray-800';
-    if (rank === 3) return 'border-orange-400 bg-orange-50 dark:bg-orange-900/20';
+    if (rank === 1) return 'border-yellow-300 bg-gradient-to-br from-yellow-50 to-amber-50 dark:from-yellow-900/20 dark:to-amber-900/20';
+    if (rank === 2) return 'border-gray-300 bg-gradient-to-br from-gray-50 to-slate-50 dark:from-gray-800 dark:to-slate-800';
+    if (rank === 3) return 'border-orange-300 bg-gradient-to-br from-orange-50 to-red-50 dark:from-orange-900/20 dark:to-red-900/20';
     return 'border-gray-200 dark:border-gray-700';
+  };
+
+  const getRankShadow = (rank) => {
+    if (rank === 1) return 'shadow-xl shadow-yellow-200/50 dark:shadow-yellow-900/30';
+    if (rank === 2) return 'shadow-lg shadow-gray-200/50 dark:shadow-gray-900/30';
+    if (rank === 3) return 'shadow-lg shadow-orange-200/50 dark:shadow-orange-900/30';
+    return 'shadow-md hover:shadow-lg';
   };
 
   if (loading) {
@@ -106,50 +114,63 @@ const Leaderboard = () => {
             </p>
           </div>
 
-          {/* Top 3 Users */}
+          {/* Top 3 Users - Podium Style */}
           {topUsers.length > 0 && (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
               {topUsers.map((user, index) => {
                 const rank = index + 1;
                 const isFirst = rank === 1;
+                // Podium arrangement: 2nd (left), 1st (center), 3rd (right)
+                const orderClass = rank === 1 ? 'md:order-2' : rank === 2 ? 'md:order-1' : 'md:order-3';
                 return (
                   <div
                     key={user._id}
-                    className={`flex flex-col items-center p-6 rounded-xl border-2 ${getRankColor(rank)} ${
-                      isFirst ? 'order-first md:order-none' : ''
-                    }`}
+                    className={`relative flex flex-col items-center p-8 rounded-2xl border-2 ${getRankColor(rank)} ${getRankShadow(rank)} ${orderClass} ${
+                      isFirst ? 'md:scale-110 md:-mt-4' : ''
+                    } transition-all duration-300 hover:scale-105 hover:shadow-2xl group cursor-pointer`}
                   >
-                    <div className="relative mb-4">
-                      {getRankIcon(rank)}
-                      <div className="absolute -top-2 -right-2 bg-primary text-white w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm">
-                        {rank}
-                      </div>
+                    {/* Medal/Rank Badge */}
+                    <div className="absolute -top-4 bg-white dark:bg-gray-800 px-4 py-2 rounded-full shadow-lg border-2 border-current">
+                      <span className="text-3xl">{getRankIcon(rank)}</span>
                     </div>
                     
-                    <img
-                      src={user.avatar || `https://ui-avatars.com/api/?name=${user.username}&background=1193d4&color=fff`}
-                      alt={user.username}
-                      className={`rounded-full mb-4 ${
-                        isFirst ? 'w-24 h-24' : 'w-20 h-20'
+                    {/* Avatar with ring effect */}
+                    <div className={`relative mt-4 mb-6 ${
+                      isFirst ? 'ring-4 ring-yellow-300/50' : rank === 2 ? 'ring-4 ring-gray-300/50' : 'ring-4 ring-orange-300/50'
+                    } rounded-full transition-all group-hover:ring-8`}>
+                      <img
+                        src={user.avatar || `https://ui-avatars.com/api/?name=${user.username}&background=1193d4&color=fff`}
+                        alt={user.username}
+                        className={`rounded-full ${
+                          isFirst ? 'w-28 h-28' : 'w-24 h-24'
+                        }`}
+                      />
+                    </div>
+                    
+                    {/* Username - Bolder and better hierarchy */}
+                    <Link
+                      to={`/profile/${user._id}`}
+                      className={`font-extrabold text-gray-900 dark:text-white mb-1 text-center hover:text-primary transition-colors ${
+                        isFirst ? 'text-2xl' : 'text-xl'
                       }`}
-                    />
-                    
-                    <h3 className={`font-bold text-gray-800 dark:text-white mb-2 ${
-                      isFirst ? 'text-2xl' : 'text-xl'
-                    }`}>
+                    >
                       {user.username}
-                    </h3>
+                    </Link>
                     
-                    <p className="text-gray-600 dark:text-gray-400 mb-2">
+                    {/* Points - Lighter and smaller */}
+                    <p className={`text-gray-500 dark:text-gray-400 mb-3 font-medium ${
+                      isFirst ? 'text-base' : 'text-sm'
+                    }`}>
                       {user.points} Points
                     </p>
                     
+                    {/* Badges */}
                     {user.badges && user.badges.length > 0 && (
-                      <div className="flex flex-wrap gap-1 justify-center">
+                      <div className="flex flex-wrap gap-1.5 justify-center mt-2">
                         {user.badges.slice(0, 2).map((badge, badgeIndex) => (
                           <span
                             key={badgeIndex}
-                            className="px-2 py-1 bg-primary/20 text-primary text-xs font-medium rounded-full"
+                            className="px-3 py-1 bg-primary/20 text-primary text-xs font-semibold rounded-full border border-primary/30"
                           >
                             {badge.name}
                           </span>
@@ -162,26 +183,26 @@ const Leaderboard = () => {
             </div>
           )}
 
-          {/* Category Filter */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6 mb-8">
-            <div className="flex flex-wrap gap-4">
+          {/* Category Filter - Enhanced Navigation Bar */}
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 p-2 mb-8">
+            <div className="flex flex-wrap justify-center gap-2">
               {[
-                { key: 'points', label: 'Points', icon: <FiAward className="h-4 w-4" /> },
-                { key: 'questions', label: 'Questions', icon: <FiMessageSquare className="h-4 w-4" /> },
-                { key: 'answers', label: 'Answers', icon: <FiUsers className="h-4 w-4" /> },
-                { key: 'reputation', label: 'Reputation', icon: <FiAward className="h-4 w-4" /> }
+                { key: 'points', label: 'Points', icon: <FiAward className="h-5 w-5" /> },
+                { key: 'questions', label: 'Questions', icon: <FiMessageSquare className="h-5 w-5" /> },
+                { key: 'answers', label: 'Answers', icon: <FiUsers className="h-5 w-5" /> },
+                { key: 'reputation', label: 'Reputation', icon: <FiAward className="h-5 w-5" /> }
               ].map((cat) => (
                 <button
                   key={cat.key}
                   onClick={() => handleCategoryChange(cat.key)}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
+                  className={`flex items-center justify-center gap-2 px-6 py-3 rounded-lg font-semibold transition-all duration-200 flex-1 min-w-[140px] ${
                     category === cat.key
-                      ? 'bg-primary text-white'
-                      : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                      ? 'bg-primary text-white shadow-md shadow-primary/30 scale-105'
+                      : 'bg-gray-50 dark:bg-gray-700/50 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600 hover:scale-102'
                   }`}
                 >
                   {cat.icon}
-                  {cat.label}
+                  <span className="text-sm">{cat.label}</span>
                 </button>
               ))}
             </div>
@@ -218,11 +239,13 @@ const Leaderboard = () => {
                   {leaderboard.map((user, index) => (
                     <tr
                       key={user._id}
-                      className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                      className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-all duration-200 group"
                     >
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center">
-                          {getRankIcon(user.rank)}
+                        <div className="flex items-center justify-center">
+                          <span className="text-2xl">
+                            {getRankIcon(user.rank)}
+                          </span>
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
@@ -230,20 +253,23 @@ const Leaderboard = () => {
                           <img
                             src={user.avatar || `https://ui-avatars.com/api/?name=${user.username}&background=1193d4&color=fff`}
                             alt={user.username}
-                            className="w-10 h-10 rounded-full mr-3"
+                            className="w-11 h-11 rounded-full mr-3 ring-2 ring-gray-200 dark:ring-gray-700 group-hover:ring-primary transition-all"
                           />
                           <div>
-                            <div className="text-sm font-medium text-gray-900 dark:text-white">
+                            <Link
+                              to={`/profile/${user._id}`}
+                              className="text-base font-bold text-gray-900 dark:text-white group-hover:text-primary transition-colors hover:underline"
+                            >
                               {user.username}
-                            </div>
-                            <div className="text-sm text-gray-500 dark:text-gray-400">
+                            </Link>
+                            <div className="text-xs text-gray-500 dark:text-gray-400 font-medium">
                               {user.points} total points
                             </div>
                           </div>
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm font-medium text-gray-900 dark:text-white">
+                        <div className="text-base font-bold text-gray-900 dark:text-white">
                           {category === 'points' && user.points}
                           {category === 'questions' && user.questionsAsked}
                           {category === 'answers' && user.answersGiven}
@@ -251,18 +277,18 @@ const Leaderboard = () => {
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex flex-wrap gap-1">
+                        <div className="flex flex-wrap gap-1.5">
                           {user.badges && user.badges.length > 0 ? (
                             user.badges.slice(0, 3).map((badge, badgeIndex) => (
                               <span
                                 key={badgeIndex}
-                                className="px-2 py-1 bg-primary/20 text-primary text-xs font-medium rounded-full"
+                                className="px-2.5 py-1 bg-primary/20 text-primary text-xs font-semibold rounded-full border border-primary/30"
                               >
                                 {badge.name}
                               </span>
                             ))
                           ) : (
-                            <span className="text-sm text-gray-400">No badges yet</span>
+                            <span className="text-xs text-gray-400">No badges yet</span>
                           )}
                         </div>
                       </td>

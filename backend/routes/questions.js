@@ -104,14 +104,22 @@ router.get('/:id', async (req, res) => {
       return res.status(404).json({ message: 'Question not found' });
     }
 
-    // Increment view count
-    question.views += 1;
-    await question.save();
+    // Increment view count (don't fail if save fails)
+    try {
+      question.views += 1;
+      await question.save();
+    } catch (saveError) {
+      console.error('Error saving view count:', saveError);
+      // Continue even if view count save fails
+    }
 
     res.json(question);
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Server error' });
+    console.error('Error fetching question:', error);
+    res.status(500).json({ 
+      message: error.message || 'Server error',
+      error: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    });
   }
 });
 
@@ -142,8 +150,24 @@ router.post('/', auth, [
 
     await question.save();
 
-    // Update user's questions count
-    await User.findByIdAndUpdate(req.userId, { $inc: { questionsAsked: 1 } });
+    // Update user's questions count and award points for asking a question
+    const updatedUser = await User.findByIdAndUpdate(
+      req.userId,
+      { 
+        $inc: { 
+          questionsAsked: 1,
+          points: 5,  // Award 5 points for asking a question
+          reputation: 1
+        } 
+      },
+      { new: true }
+    );
+    
+    // Assign badges based on new points
+    if (updatedUser) {
+      updatedUser.assignBadges();
+      await updatedUser.save();
+    }
 
     // Populate author info
     await question.populate('author', 'username avatar points');
@@ -209,8 +233,14 @@ router.delete('/:id', auth, async (req, res) => {
     // Delete associated answers
     await Answer.deleteMany({ question: question._id });
 
-    // Update user's questions count
-    await User.findByIdAndUpdate(req.userId, { $inc: { questionsAsked: -1 } });
+    // Update user's questions count and deduct points
+    await User.findByIdAndUpdate(req.userId, { 
+      $inc: { 
+        questionsAsked: -1,
+        points: -5,  // Deduct 5 points for deleting a question
+        reputation: -1
+      } 
+    });
 
     await Question.findByIdAndDelete(req.params.id);
 
@@ -242,12 +272,16 @@ router.post('/:id/vote', auth, [
       vote => vote.user.toString() === req.userId
     );
 
+    let pointsChange = 0;
+
     if (voteType === 'remove') {
       if (existingVote) {
         if (existingVote.voteType === 'upvote') {
           question.votes.upvotes -= 1;
+          pointsChange = -2; // Remove upvote points
         } else {
           question.votes.downvotes -= 1;
+          pointsChange = 1; // Remove downvote penalty
         }
         question.votes.voters = question.votes.voters.filter(
           vote => vote.user.toString() !== req.userId
@@ -260,9 +294,11 @@ router.post('/:id/vote', auth, [
           if (existingVote.voteType === 'upvote') {
             question.votes.upvotes -= 1;
             question.votes.downvotes += 1;
+            pointsChange = -3; // Remove upvote points and add downvote penalty
           } else {
             question.votes.downvotes -= 1;
             question.votes.upvotes += 1;
+            pointsChange = 3; // Remove downvote penalty and add upvote points
           }
           existingVote.voteType = voteType;
         }
@@ -274,13 +310,36 @@ router.post('/:id/vote', auth, [
         });
         if (voteType === 'upvote') {
           question.votes.upvotes += 1;
+          pointsChange = 2; // Award 2 points for upvote on question
         } else {
           question.votes.downvotes += 1;
+          pointsChange = -1; // Deduct 1 point for downvote on question
         }
       }
     }
 
     await question.save();
+
+    // Update question author's points if there's a change
+    if (pointsChange !== 0) {
+      const updatedAuthor = await User.findByIdAndUpdate(
+        question.author,
+        {
+          $inc: { 
+            points: pointsChange,
+            reputation: pointsChange
+          }
+        },
+        { new: true }
+      );
+      
+      // Assign badges based on new points
+      if (updatedAuthor) {
+        updatedAuthor.assignBadges();
+        await updatedAuthor.save();
+      }
+    }
+
     res.json({ upvotes: question.votes.upvotes, downvotes: question.votes.downvotes });
   } catch (error) {
     console.error(error);

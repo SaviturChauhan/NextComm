@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { FiSearch, FiFilter, FiPlus, FiClock, FiMessageSquare, FiEye, FiThumbsUp } from 'react-icons/fi';
 import axios from 'axios';
+import CustomSelect from '../components/common/CustomSelect';
 
 const Dashboard = () => {
   const [questions, setQuestions] = useState([]);
@@ -107,7 +108,7 @@ const Dashboard = () => {
               <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
                 Questions
               </h1>
-              <p className="text-gray-600 dark:text-gray-400">
+              <p className="text-gray-600 dark:text-gray-300">
                 Find answers to wireless communication questions
               </p>
             </div>
@@ -139,50 +140,56 @@ const Dashboard = () => {
 
             <div className="flex flex-wrap gap-4">
               <div className="flex items-center gap-2">
-                <FiFilter className="h-4 w-4 text-gray-500" />
+                <FiFilter className="h-4 w-4 text-gray-500 dark:text-gray-400" />
                 <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Sort by:</span>
-                <select
-                  value={filters.sortBy}
-                  onChange={(e) => handleFilterChange('sortBy', e.target.value)}
-                  className="px-3 py-1 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-                >
-                  <option value="newest">Newest</option>
-                  <option value="oldest">Oldest</option>
-                  <option value="mostVoted">Most Voted</option>
-                  <option value="mostAnswered">Most Answered</option>
-                </select>
+                <div className="w-40">
+                  <CustomSelect
+                    value={filters.sortBy}
+                    onChange={(value) => handleFilterChange('sortBy', value)}
+                    options={[
+                      { value: 'newest', label: 'Newest' },
+                      { value: 'oldest', label: 'Oldest' },
+                      { value: 'mostVoted', label: 'Most Voted' },
+                      { value: 'mostAnswered', label: 'Most Answered' }
+                    ]}
+                  />
+                </div>
               </div>
 
               <div className="flex items-center gap-2">
                 <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Category:</span>
-                <select
-                  value={filters.category}
-                  onChange={(e) => handleFilterChange('category', e.target.value)}
-                  className="px-3 py-1 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-                >
-                  <option value="all">All Categories</option>
-                  <option value="5G">5G</option>
-                  <option value="4G">4G</option>
-                  <option value="MIMO">MIMO</option>
-                  <option value="OFDM">OFDM</option>
-                  <option value="Beamforming">Beamforming</option>
-                  <option value="Channel Estimation">Channel Estimation</option>
-                  <option value="Other">Other</option>
-                </select>
+                <div className="w-56">
+                  <CustomSelect
+                    value={filters.category}
+                    onChange={(value) => handleFilterChange('category', value)}
+                    options={[
+                      { value: 'all', label: 'All Categories' },
+                      { value: 'Introduction & Performance', label: 'Introduction & Performance' },
+                      { value: 'Wireless Channel Models', label: 'Wireless Channel Models' },
+                      { value: 'Diversity & Channel Capacity', label: 'Diversity & Channel Capacity' },
+                      { value: 'MIMO Systems', label: 'MIMO Systems' },
+                      { value: 'OFDM (Multi-carrier Modulation)', label: 'OFDM (Multi-carrier Modulation)' },
+                      { value: 'Cellular Standards', label: 'Cellular Standards' },
+                      { value: 'Other', label: 'Other' }
+                    ]}
+                  />
+                </div>
               </div>
 
               <div className="flex items-center gap-2">
                 <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Difficulty:</span>
-                <select
-                  value={filters.difficulty}
-                  onChange={(e) => handleFilterChange('difficulty', e.target.value)}
-                  className="px-3 py-1 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-                >
-                  <option value="all">All Levels</option>
-                  <option value="beginner">Beginner</option>
-                  <option value="intermediate">Intermediate</option>
-                  <option value="advanced">Advanced</option>
-                </select>
+                <div className="w-40">
+                  <CustomSelect
+                    value={filters.difficulty}
+                    onChange={(value) => handleFilterChange('difficulty', value)}
+                    options={[
+                      { value: 'all', label: 'All Levels' },
+                      { value: 'beginner', label: 'Beginner' },
+                      { value: 'intermediate', label: 'Intermediate' },
+                      { value: 'advanced', label: 'Advanced' }
+                    ]}
+                  />
+                </div>
               </div>
             </div>
           </div>
@@ -191,9 +198,9 @@ const Dashboard = () => {
           <div className="space-y-4">
             {questions.length === 0 ? (
               <div className="text-center py-12">
-                <FiMessageSquare className="mx-auto h-12 w-12 text-gray-400" />
+                <FiMessageSquare className="mx-auto h-12 w-12 text-gray-400 dark:text-gray-500" />
                 <h3 className="mt-2 text-sm font-medium text-gray-900 dark:text-white">No questions found</h3>
-                <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                <p className="mt-1 text-sm text-gray-500 dark:text-gray-300">
                   {searchQuery ? 'Try adjusting your search terms' : 'Be the first to ask a question!'}
                 </p>
                 {!searchQuery && (
@@ -231,19 +238,22 @@ const Dashboard = () => {
                             {question.title}
                           </Link>
                           
-                          <p className="mt-2 text-gray-600 dark:text-gray-400 line-clamp-2">
+                          <p className="mt-2 text-gray-600 dark:text-gray-300 line-clamp-2">
                             {question.description}
                           </p>
                           
-                          <div className="mt-3 flex flex-wrap items-center gap-4 text-sm text-gray-500 dark:text-gray-400">
-                            <div className="flex items-center gap-1">
+                          <div className="mt-3 flex flex-wrap items-center gap-4 text-sm text-gray-500 dark:text-gray-300">
+                            <Link 
+                              to={`/profile/${question.author?._id}`}
+                              className="flex items-center gap-1 hover:text-primary transition-colors"
+                            >
                               <img
                                 src={question.author?.avatar || `https://ui-avatars.com/api/?name=${question.author?.username}&background=1193d4&color=fff`}
                                 alt={question.author?.username}
                                 className="w-5 h-5 rounded-full"
                               />
-                              <span>{question.author?.username}</span>
-                            </div>
+                              <span className="hover:underline">{question.author?.username}</span>
+                            </Link>
                             
                             <div className="flex items-center gap-1">
                               <FiClock className="h-4 w-4" />
@@ -302,7 +312,7 @@ const Dashboard = () => {
               <button
                 onClick={() => handlePageChange(pagination.currentPage - 1)}
                 disabled={!pagination.hasPrev}
-                className="px-3 py-2 text-sm font-medium text-gray-500 dark:text-gray-400 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 Previous
               </button>
@@ -314,7 +324,7 @@ const Dashboard = () => {
               <button
                 onClick={() => handlePageChange(pagination.currentPage + 1)}
                 disabled={!pagination.hasNext}
-                className="px-3 py-2 text-sm font-medium text-gray-500 dark:text-gray-400 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 Next
               </button>

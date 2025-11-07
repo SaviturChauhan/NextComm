@@ -10,6 +10,7 @@ import AskQuestion from './pages/AskQuestion';
 import QuestionDetails from './pages/QuestionDetails';
 import Leaderboard from './pages/Leaderboard';
 import UserProfile from './pages/UserProfile';
+import PointsGuide from './pages/PointsGuide';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import ProtectedRoute from './components/auth/ProtectedRoute';
@@ -39,21 +40,52 @@ function App() {
                 <Route path="/question/:id" element={<QuestionDetails />} />
                 <Route path="/leaderboard" element={<Leaderboard />} />
                 <Route path="/profile/:id" element={<UserProfile />} />
+                <Route path="/points-guide" element={<PointsGuide />} />
               </Routes>
             </main>
             <Toaster
-              position="top-right"
+              position="top-center"
+              containerStyle={{
+                top: '50%',
+                left: '50%',
+                transform: 'translate(-50%, -50%)',
+                position: 'fixed',
+              }}
               toastOptions={{
                 duration: 4000,
                 style: {
-                  background: 'var(--toast-bg)',
-                  color: 'var(--toast-color)',
+                  borderRadius: '16px',
+                  padding: '18px 24px',
+                  boxShadow: '0 20px 40px rgba(0, 0, 0, 0.15)',
+                  fontSize: '15px',
+                  fontWeight: '600',
+                  minWidth: '320px',
+                  maxWidth: '500px',
+                  backdropFilter: 'blur(10px)',
                 },
                 success: {
                   duration: 3000,
+                  iconTheme: {
+                    primary: '#10b981',
+                    secondary: '#fff',
+                  },
+                  style: {
+                    background: 'rgba(240, 253, 244, 0.95)',
+                    color: '#166534',
+                    border: '2px solid #86efac',
+                  },
                 },
                 error: {
                   duration: 5000,
+                  iconTheme: {
+                    primary: '#ef4444',
+                    secondary: '#fff',
+                  },
+                  style: {
+                    background: 'rgba(254, 242, 242, 0.95)',
+                    color: '#991b1b',
+                    border: '2px solid #fca5a5',
+                  },
                 },
               }}
             />

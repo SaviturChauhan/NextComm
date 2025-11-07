@@ -65,7 +65,24 @@ const questionSchema = new mongoose.Schema({
   },
   category: {
     type: String,
-    enum: ['5G', '4G', 'MIMO', 'OFDM', 'Beamforming', 'Channel Estimation', 'Other'],
+    // Allow both old and new categories for backward compatibility
+    enum: [
+      // New categories
+      'Introduction & Performance',
+      'Wireless Channel Models',
+      'Diversity & Channel Capacity',
+      'MIMO Systems',
+      'OFDM (Multi-carrier Modulation)',
+      'Cellular Standards',
+      // Old categories (for backward compatibility)
+      '5G',
+      '4G',
+      'MIMO',
+      'OFDM',
+      'Beamforming',
+      'Channel Estimation',
+      'Other'
+    ],
     default: 'Other'
   }
 }, {

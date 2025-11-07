@@ -14,19 +14,24 @@ app.use(cors({
   credentials: true
 }));
 
-// Rate limiting
+// Rate limiting - more lenient in development
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100 // limit each IP to 100 requests per windowMs
+  max: process.env.NODE_ENV === 'production' ? 100 : 1000, // 100 in production, 1000 in development
+  message: { message: 'Too many requests from this IP, please try again later.' },
+  standardHeaders: true,
+  legacyHeaders: false,
 });
-app.use(limiter);
+
+// Apply rate limiting only to API routes, not static files
+app.use('/api/', limiter);
 
 // Body parsing middleware
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
 // MongoDB connection
-mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/wireless-qa-hub', {
+mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/nextcomm', {
   useNewUrlParser: true,
   useUnifiedTopology: true,
 })

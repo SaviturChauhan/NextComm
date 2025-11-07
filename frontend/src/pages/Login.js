@@ -70,27 +70,46 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background-light dark:bg-background-dark py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
-        <div className="text-center">
-          <div className="mx-auto h-12 w-12 bg-primary rounded-lg flex items-center justify-center">
-            <svg className="h-8 w-8 text-white" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
-            </svg>
+    <div className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+      {/* Background Image with Gradient Overlay - Matching Home Page */}
+      <div 
+        className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+        style={{
+          backgroundImage: `url('https://images.unsplash.com/photo-1451187580459-43490279c0fa?ixlib=rb-4.0.3&auto=format&fit=crop&w=2072&q=80')`,
+          animation: 'zoomIn 20s ease-in-out infinite alternate'
+        }}
+      >
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/90 via-blue-600/85 to-purple-600/90"></div>
+      </div>
+
+      {/* Animated Background Elements */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-white/10 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-white/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
+      </div>
+
+      {/* Form Card */}
+      <div className="relative z-10 max-w-md w-full">
+        <div className="bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 dark:border-gray-700/50 p-8 md:p-10">
+          <div className="text-center mb-8">
+            <div className="mx-auto h-16 w-16 bg-gradient-to-br from-primary to-blue-600 rounded-2xl flex items-center justify-center shadow-lg mb-6">
+              <svg className="h-10 w-10 text-white" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+              </svg>
+            </div>
+            <h2 className="text-4xl font-extrabold text-gray-900 dark:text-white mb-3">
+              Sign in to your account
+            </h2>
+            <p className="text-sm text-gray-600 dark:text-gray-400">
+              Or{' '}
+              <Link
+                to="/register"
+                className="font-semibold text-primary hover:text-primary/80 transition-colors"
+              >
+                create a new account
+              </Link>
+            </p>
           </div>
-          <h2 className="mt-6 text-3xl font-bold text-gray-900 dark:text-white">
-            Sign in to your account
-          </h2>
-          <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
-            Or{' '}
-            <Link
-              to="/register"
-              className="font-medium text-primary hover:text-primary/80 transition-colors"
-            >
-              create a new account
-            </Link>
-          </p>
-        </div>
 
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           <div className="space-y-4">
@@ -109,9 +128,9 @@ const Login = () => {
                   autoComplete="email"
                   value={formData.email}
                   onChange={handleChange}
-                  className={`appearance-none relative block w-full pl-10 pr-3 py-2 border ${
-                    errors.email ? 'border-red-300' : 'border-gray-300 dark:border-gray-600'
-                  } placeholder-gray-500 text-gray-900 dark:text-white bg-white dark:bg-gray-800 rounded-lg focus:outline-none focus:ring-primary focus:border-primary sm:text-sm`}
+                  className={`appearance-none relative block w-full pl-10 pr-3 py-3 border-2 ${
+                    errors.email ? 'border-red-400' : 'border-gray-300 dark:border-gray-600'
+                  } placeholder-gray-400 text-gray-900 dark:text-white bg-white dark:bg-gray-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all sm:text-sm`}
                   placeholder="Enter your email"
                 />
               </div>
@@ -135,9 +154,9 @@ const Login = () => {
                   autoComplete="current-password"
                   value={formData.password}
                   onChange={handleChange}
-                  className={`appearance-none relative block w-full pl-10 pr-10 py-2 border ${
-                    errors.password ? 'border-red-300' : 'border-gray-300 dark:border-gray-600'
-                  } placeholder-gray-500 text-gray-900 dark:text-white bg-white dark:bg-gray-800 rounded-lg focus:outline-none focus:ring-primary focus:border-primary sm:text-sm`}
+                  className={`appearance-none relative block w-full pl-10 pr-10 py-3 border-2 ${
+                    errors.password ? 'border-red-400' : 'border-gray-300 dark:border-gray-600'
+                  } placeholder-gray-400 text-gray-900 dark:text-white bg-white dark:bg-gray-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all sm:text-sm`}
                   placeholder="Enter your password"
                 />
                 <button
@@ -164,7 +183,7 @@ const Login = () => {
                 id="remember-me"
                 name="remember-me"
                 type="checkbox"
-                className="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded"
+                className="h-4 w-4 text-primary focus:ring-primary border-gray-300 dark:border-gray-600 rounded"
               />
               <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-700 dark:text-gray-300">
                 Remember me
@@ -172,7 +191,7 @@ const Login = () => {
             </div>
 
             <div className="text-sm">
-              <a href="#" className="font-medium text-primary hover:text-primary/80 transition-colors">
+              <a href="#" className="font-semibold text-primary hover:text-primary/80 transition-colors">
                 Forgot your password?
               </a>
             </div>
@@ -182,16 +201,22 @@ const Login = () => {
             <button
               type="submit"
               disabled={loading}
-              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="group relative w-full flex justify-center items-center gap-2 py-3.5 px-4 border border-transparent text-base font-bold rounded-xl text-white bg-gradient-to-r from-primary to-blue-600 hover:from-primary/90 hover:to-blue-600/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-[1.02]"
             >
               {loading ? (
-                <div className="spinner"></div>
+                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
               ) : (
-                'Sign in'
+                <>
+                  Sign in
+                  <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                  </svg>
+                </>
               )}
             </button>
           </div>
         </form>
+        </div>
       </div>
     </div>
   );

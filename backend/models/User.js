@@ -91,5 +91,35 @@ userSchema.methods.updateLastActive = function() {
   return this.save();
 };
 
+// Assign badges based on points
+userSchema.methods.assignBadges = function() {
+  const badgeThresholds = [
+    { name: 'Beginner', points: 0, description: 'Welcome to NextComm!' },
+    { name: 'Contributor', points: 100, description: 'Asked or answered 10+ questions' },
+    { name: 'Scholar', points: 250, description: 'Consistent contributor' },
+    { name: 'Expert', points: 500, description: 'Recognized subject matter expert' },
+    { name: 'Master', points: 1000, description: 'Master of wireless communication' },
+    { name: 'Legend', points: 2000, description: 'Top 10 contributor' },
+    { name: 'Elite', points: 3000, description: 'Elite community member' },
+    { name: 'Guru', points: 5000, description: 'Ultimate knowledge guru' }
+  ];
+
+  const currentBadgeNames = this.badges.map(b => b.name);
+  const earnedBadges = badgeThresholds.filter(badge => this.points >= badge.points);
+  
+  // Add new badges that user has earned but doesn't have yet
+  earnedBadges.forEach(badge => {
+    if (!currentBadgeNames.includes(badge.name)) {
+      this.badges.push({
+        name: badge.name,
+        description: badge.description,
+        earnedAt: new Date()
+      });
+    }
+  });
+
+  return this;
+};
+
 module.exports = mongoose.model('User', userSchema);
 

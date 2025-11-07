@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTheme } from '../../contexts/ThemeContext';
-import { FiMenu, FiX, FiSun, FiMoon, FiSearch, FiPlus } from 'react-icons/fi';
+import { FiMenu, FiX, FiSun, FiMoon, FiSearch } from 'react-icons/fi';
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -30,19 +30,19 @@ const Navbar = () => {
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-3">
+          <Link to="/" className="flex items-center gap-3 mr-6">
             <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
               <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
               </svg>
             </div>
             <h1 className="text-xl font-bold text-gray-900 dark:text-white">
-              Wireless Q&A Hub
+              NextComm
             </h1>
           </Link>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center gap-6">
+          <nav className="hidden md:flex items-center gap-8 ml-8">
             <Link 
               to="/dashboard" 
               className="text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-primary transition-colors"
@@ -55,6 +55,12 @@ const Navbar = () => {
             >
               Leaderboard
             </Link>
+            <Link 
+              to="/points-guide" 
+              className="text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-primary transition-colors"
+            >
+              Points
+            </Link>
             {isAuthenticated && (
               <Link 
                 to="/ask" 
@@ -66,7 +72,7 @@ const Navbar = () => {
           </nav>
 
           {/* Search Bar */}
-          <div className="hidden sm:block flex-1 max-w-md mx-4">
+          <div className="hidden sm:block flex-1 max-w-md mx-8">
             <form onSubmit={handleSearch} className="relative">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <FiSearch className="h-4 w-4 text-gray-400" />
@@ -82,7 +88,7 @@ const Navbar = () => {
           </div>
 
           {/* Right side buttons */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-4">
             {/* Theme toggle */}
             <button
               onClick={toggleTheme}
@@ -92,16 +98,7 @@ const Navbar = () => {
             </button>
 
             {isAuthenticated ? (
-              <div className="flex items-center gap-2">
-                {/* Ask Question Button */}
-                <Link
-                  to="/ask"
-                  className="hidden sm:inline-flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors"
-                >
-                  <FiPlus className="h-4 w-4" />
-                  Ask Question
-                </Link>
-
+              <div className="flex items-center gap-3">
                 {/* User Menu */}
                 <div className="relative">
                   <button
@@ -145,7 +142,7 @@ const Navbar = () => {
                 </div>
               </div>
             ) : (
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-3">
                 <Link
                   to="/login"
                   className="px-4 py-2 text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-primary transition-colors"
@@ -205,6 +202,13 @@ const Navbar = () => {
                 onClick={() => setIsMenuOpen(false)}
               >
                 Leaderboard
+              </Link>
+              <Link
+                to="/points-guide"
+                className="block px-2 py-2 text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-primary transition-colors"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Points
               </Link>
               {isAuthenticated && (
                 <Link

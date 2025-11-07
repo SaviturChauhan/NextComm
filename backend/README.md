@@ -1,6 +1,6 @@
-# Wireless Q&A Hub - Backend API
+# NextComm - Backend API
 
-RESTful API for the Wireless Q&A Hub platform built with Node.js, Express, and MongoDB Atlas.
+RESTful API for the NextComm platform built with Node.js, Express, and MongoDB Atlas.
 
 ## Features
 
@@ -39,7 +39,7 @@ RESTful API for the Wireless Q&A Hub platform built with Node.js, Express, and M
 
 ```env
 PORT=5000
-MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/wireless-qa-hub
+MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/nextcomm
 JWT_SECRET=your-super-secret-jwt-key-here
 NODE_ENV=development
 ```
@@ -290,7 +290,7 @@ backend/
 ### Environment Variables for Production
 ```env
 PORT=5000
-MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/wireless-qa-hub
+MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/nextcomm
 JWT_SECRET=your-production-jwt-secret
 NODE_ENV=production
 ```

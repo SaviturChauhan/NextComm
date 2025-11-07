@@ -1,6 +1,6 @@
 #!/bin/bash
 
-echo "🚀 Setting up Wireless Q&A Hub..."
+echo "🚀 Setting up NextComm..."
 
 # Check if Node.js is installed
 if ! command -v node &> /dev/null; then

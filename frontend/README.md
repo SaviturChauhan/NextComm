@@ -1,6 +1,6 @@
-# Wireless Q&A Hub - Frontend
+# NextComm - Frontend
 
-Modern React frontend for the Wireless Q&A Hub platform with responsive design and dark/light theme support.
+Modern React frontend for the NextComm platform with responsive design and dark/light theme support.
 
 ## Features
 

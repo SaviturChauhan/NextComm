@@ -1,4 +1,4 @@
-# Wireless Q&A Hub
+# NextComm
 
 A comprehensive Q&A platform for wireless communication students and professionals, built with React frontend and Node.js/Express backend with MongoDB Atlas.
 
@@ -47,7 +47,7 @@ A comprehensive Q&A platform for wireless communication students and professiona
 1. **Clone the repository**
    ```bash
    git clone <repository-url>
-   cd wireless-qa-hub
+   cd nextcomm
    ```
 
 2. **Set up the Backend**
@@ -60,7 +60,7 @@ A comprehensive Q&A platform for wireless communication students and professiona
    Update the `.env` file with your MongoDB Atlas connection string and JWT secret:
    ```env
    PORT=5000
-   MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/wireless-qa-hub?retryWrites=true&w=majority
+   MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/nextcomm?retryWrites=true&w=majority
    JWT_SECRET=your-super-secret-jwt-key-here
    NODE_ENV=development
    ```
@@ -205,5 +205,5 @@ This project is licensed under the MIT License.
 
 ## Support
 
-For support, email support@wirelessqahub.com or create an issue in the repository.
+For support, email support@nextcomm.com or create an issue in the repository.
 

@@ -38,8 +38,24 @@ router.post('/', auth, [
     question.answers.push(answer._id);
     await question.save();
 
-    // Update user's answers count
-    await User.findByIdAndUpdate(req.userId, { $inc: { answersGiven: 1 } });
+    // Update user's answers count and award points for answering
+    const updatedUser = await User.findByIdAndUpdate(
+      req.userId,
+      { 
+        $inc: { 
+          answersGiven: 1,
+          points: 10,  // Award 10 points for answering a question
+          reputation: 2
+        } 
+      },
+      { new: true }
+    );
+    
+    // Assign badges based on new points
+    if (updatedUser) {
+      updatedUser.assignBadges();
+      await updatedUser.save();
+    }
 
     // Populate author info
     await answer.populate('author', 'username avatar points');
@@ -94,24 +110,54 @@ router.delete('/:id', auth, async (req, res) => {
       return res.status(404).json({ message: 'Answer not found' });
     }
 
-    if (answer.author.toString() !== req.userId) {
-      return res.status(403).json({ message: 'Not authorized to delete this answer' });
+    // Compare author IDs as strings to ensure proper comparison
+    const answerAuthorId = String(answer.author);
+    const userId = String(req.userId);
+
+    if (answerAuthorId !== userId) {
+      return res.status(403).json({ message: 'Not authorized to delete this answer. Only the answer author can delete their answer.' });
     }
 
-    // Remove answer from question
+    // Get the question to check if this answer is accepted
+    const question = await Question.findById(answer.question);
+    
+    // If this answer is accepted, unaccept it and mark question as unsolved
+    if (question && question.acceptedAnswer && question.acceptedAnswer.toString() === req.params.id) {
+      question.acceptedAnswer = null;
+      question.isSolved = false;
+      await question.save();
+    }
+
+    // Remove answer from question's answers array
     await Question.findByIdAndUpdate(answer.question, {
       $pull: { answers: answer._id }
     });
 
-    // Update user's answers count
-    await User.findByIdAndUpdate(req.userId, { $inc: { answersGiven: -1 } });
+    // Calculate points to deduct (base points + upvotes)
+    const pointsToDeduct = 10 + (answer.votes.upvotes * 3); // Base 10 + 3 per upvote
+    const reputationToDeduct = 2 + answer.votes.upvotes;
+
+    // Update user's answers count and deduct points
+    const updatedUser = await User.findByIdAndUpdate(req.userId, { 
+      $inc: { 
+        answersGiven: -1,
+        points: -pointsToDeduct,
+        reputation: -reputationToDeduct
+      } 
+    }, { new: true });
+
+    // Update badges if needed
+    if (updatedUser) {
+      updatedUser.assignBadges();
+      await updatedUser.save();
+    }
 
     await Answer.findByIdAndDelete(req.params.id);
 
     res.json({ message: 'Answer deleted successfully' });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Server error' });
+    console.error('Error deleting answer:', error);
+    res.status(500).json({ message: 'Server error: ' + error.message });
   }
 });
 
@@ -136,12 +182,16 @@ router.post('/:id/vote', auth, [
       vote => vote.user.toString() === req.userId
     );
 
+    let pointsChange = 0;
+
     if (voteType === 'remove') {
       if (existingVote) {
         if (existingVote.voteType === 'upvote') {
           answer.votes.upvotes -= 1;
+          pointsChange = -3; // Remove upvote points (3 points for answer upvote)
         } else {
           answer.votes.downvotes -= 1;
+          pointsChange = 2; // Remove downvote penalty
         }
         answer.votes.voters = answer.votes.voters.filter(
           vote => vote.user.toString() !== req.userId
@@ -154,9 +204,11 @@ router.post('/:id/vote', auth, [
           if (existingVote.voteType === 'upvote') {
             answer.votes.upvotes -= 1;
             answer.votes.downvotes += 1;
+            pointsChange = -5; // Remove upvote points and add downvote penalty
           } else {
             answer.votes.downvotes -= 1;
             answer.votes.upvotes += 1;
+            pointsChange = 5; // Remove downvote penalty and add upvote points
           }
           existingVote.voteType = voteType;
         }
@@ -168,13 +220,36 @@ router.post('/:id/vote', auth, [
         });
         if (voteType === 'upvote') {
           answer.votes.upvotes += 1;
+          pointsChange = 3; // Award 3 points for upvote on answer (more valuable than question)
         } else {
           answer.votes.downvotes += 1;
+          pointsChange = -2; // Deduct 2 points for downvote on answer
         }
       }
     }
 
     await answer.save();
+
+    // Update answer author's points if there's a change
+    if (pointsChange !== 0) {
+      const updatedAuthor = await User.findByIdAndUpdate(
+        answer.author,
+        {
+          $inc: { 
+            points: pointsChange,
+            reputation: pointsChange
+          }
+        },
+        { new: true }
+      );
+      
+      // Assign badges based on new points
+      if (updatedAuthor) {
+        updatedAuthor.assignBadges();
+        await updatedAuthor.save();
+      }
+    }
+
     res.json({ upvotes: answer.votes.upvotes, downvotes: answer.votes.downvotes });
   } catch (error) {
     console.error(error);
@@ -197,8 +272,12 @@ router.post('/:id/accept', auth, async (req, res) => {
       return res.status(404).json({ message: 'Question not found' });
     }
 
-    if (question.author.toString() !== req.userId) {
-      return res.status(403).json({ message: 'Not authorized to accept this answer' });
+    // Compare author IDs as strings to ensure proper comparison
+    const questionAuthorId = String(question.author);
+    const userId = String(req.userId);
+    
+    if (questionAuthorId !== userId) {
+      return res.status(403).json({ message: 'Not authorized to accept this answer. Only the question author can accept answers.' });
     }
 
     // Unaccept previous answer if any
@@ -215,9 +294,19 @@ router.post('/:id/accept', auth, async (req, res) => {
     await question.save();
 
     // Award points to answer author
-    await User.findByIdAndUpdate(answer.author, { 
-      $inc: { points: 50, reputation: 50 } 
-    });
+    const updatedAuthor = await User.findByIdAndUpdate(
+      answer.author,
+      { 
+        $inc: { points: 50, reputation: 50 } 
+      },
+      { new: true }
+    );
+    
+    // Assign badges based on new points
+    if (updatedAuthor) {
+      updatedAuthor.assignBadges();
+      await updatedAuthor.save();
+    }
 
     res.json({ message: 'Answer accepted successfully' });
   } catch (error) {

@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 import { FiTag, FiAlertCircle } from 'react-icons/fi';
 import axios from 'axios';
 import toast from 'react-hot-toast';
+import CustomSelect from '../components/common/CustomSelect';
 
 const AskQuestion = () => {
   const [formData, setFormData] = useState({
@@ -18,7 +19,8 @@ const AskQuestion = () => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  const quillModules = {
+  // ReactQuill configuration with custom paste handler
+  const quillModules = React.useMemo(() => ({
     toolbar: [
       [{ 'header': [1, 2, 3, false] }],
       ['bold', 'italic', 'underline', 'strike'],
@@ -27,7 +29,47 @@ const AskQuestion = () => {
       ['link', 'image'],
       ['clean']
     ],
-  };
+    clipboard: {
+      // Custom paste handler to preserve LaTeX formulas
+      matchVisual: false,
+    }
+  }), []);
+
+  // Custom paste handler ref
+  const quillRef = useRef(null);
+
+  // Setup paste handler after Quill is initialized
+  useEffect(() => {
+    if (quillRef.current) {
+      const quill = quillRef.current.getEditor();
+      
+      // Custom paste handler to preserve LaTeX formulas
+      quill.clipboard.addMatcher(Node.TEXT_NODE, (node, delta) => {
+        const text = node.data;
+        
+        // If text contains LaTeX formulas, preserve them
+        if (text && text.includes('$')) {
+          // Keep the text as-is, ReactQuill will preserve it
+          // We'll render formulas when displaying content
+          return delta;
+        }
+        
+        return delta;
+      });
+      
+      // Also handle HTML paste
+      quill.clipboard.addMatcher(Node.ELEMENT_NODE, (node, delta) => {
+        if (node.tagName === 'P' || node.tagName === 'DIV') {
+          const text = node.textContent || '';
+          if (text.includes('$')) {
+            // Preserve formulas in HTML
+            return delta;
+          }
+        }
+        return delta;
+      });
+    }
+  }, []);
 
   const quillFormats = [
     'header', 'bold', 'italic', 'underline', 'strike',
@@ -120,7 +162,7 @@ const AskQuestion = () => {
             <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
               Ask a Question
             </h1>
-            <p className="text-gray-600 dark:text-gray-400">
+            <p className="text-gray-600 dark:text-gray-300">
               Get help from the community by asking a detailed question
             </p>
           </div>
@@ -158,14 +200,16 @@ const AskQuestion = () => {
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Description *
                 </label>
-                <div className="border border-gray-300 dark:border-gray-600 rounded-lg overflow-hidden">
+                <div className="rounded-lg quill-wrapper">
                   <ReactQuill
+                    ref={quillRef}
+                    theme="snow"
                     value={formData.description}
                     onChange={(value) => handleChange('description', value)}
                     modules={quillModules}
                     formats={quillFormats}
-                    placeholder="Include all the information someone would need to answer your question. Use LaTeX for math formulas, e.g., $$R = \frac{1}{2}\log_2(1 + \text{SNR})$$."
-                    style={{ minHeight: '200px' }}
+                    placeholder="Include all the information someone would need to answer your question. Click here to start typing..."
+                    className="bg-white dark:bg-gray-800"
                   />
                 </div>
                 {errors.description && (
@@ -193,7 +237,7 @@ const AskQuestion = () => {
                     id="tags"
                     value={formData.tags}
                     onChange={(e) => handleChange('tags', e.target.value)}
-                    placeholder="e.g. 5G, OFDM, MIMO, channel-estimation"
+                    placeholder="e.g. fading, path-loss, diversity, massive-mimo, papr, cyclic-prefix"
                     className={`w-full pl-10 pr-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent ${
                       errors.tags ? 'border-red-300' : 'border-gray-300 dark:border-gray-600'
                     }`}
@@ -216,36 +260,34 @@ const AskQuestion = () => {
                   <label htmlFor="category" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Category
                   </label>
-                  <select
-                    id="category"
+                  <CustomSelect
                     value={formData.category}
-                    onChange={(e) => handleChange('category', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-                  >
-                    <option value="Other">Other</option>
-                    <option value="5G">5G</option>
-                    <option value="4G">4G</option>
-                    <option value="MIMO">MIMO</option>
-                    <option value="OFDM">OFDM</option>
-                    <option value="Beamforming">Beamforming</option>
-                    <option value="Channel Estimation">Channel Estimation</option>
-                  </select>
+                    onChange={(value) => handleChange('category', value)}
+                    options={[
+                      { value: 'Other', label: 'Other' },
+                      { value: 'Introduction & Performance', label: 'Introduction & Performance' },
+                      { value: 'Wireless Channel Models', label: 'Wireless Channel Models' },
+                      { value: 'Diversity & Channel Capacity', label: 'Diversity & Channel Capacity' },
+                      { value: 'MIMO Systems', label: 'MIMO Systems' },
+                      { value: 'OFDM (Multi-carrier Modulation)', label: 'OFDM (Multi-carrier Modulation)' },
+                      { value: 'Cellular Standards', label: 'Cellular Standards' }
+                    ]}
+                  />
                 </div>
 
                 <div>
                   <label htmlFor="difficulty" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Difficulty Level
                   </label>
-                  <select
-                    id="difficulty"
+                  <CustomSelect
                     value={formData.difficulty}
-                    onChange={(e) => handleChange('difficulty', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-                  >
-                    <option value="beginner">Beginner</option>
-                    <option value="intermediate">Intermediate</option>
-                    <option value="advanced">Advanced</option>
-                  </select>
+                    onChange={(value) => handleChange('difficulty', value)}
+                    options={[
+                      { value: 'beginner', label: 'Beginner' },
+                      { value: 'intermediate', label: 'Intermediate' },
+                      { value: 'advanced', label: 'Advanced' }
+                    ]}
+                  />
                 </div>
               </div>
             </div>
