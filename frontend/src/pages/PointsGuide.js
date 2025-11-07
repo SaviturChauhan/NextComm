@@ -106,7 +106,7 @@ const PointsGuide = () => {
     { 
       name: 'Contributor', 
       points: 100, 
-      description: 'Asked or answered 10+ questions',
+      description: 'Earned at 100 points milestone',
       color: 'from-green-400 to-emerald-500',
       bgColor: 'bg-green-50 dark:bg-green-900/20',
       borderColor: 'border-green-300 dark:border-green-700',
@@ -117,7 +117,7 @@ const PointsGuide = () => {
     { 
       name: 'Scholar', 
       points: 250, 
-      description: 'Consistent contributor',
+      description: 'Earned at 250 points milestone',
       color: 'from-blue-400 to-cyan-500',
       bgColor: 'bg-blue-50 dark:bg-blue-900/20',
       borderColor: 'border-blue-300 dark:border-blue-700',
@@ -128,7 +128,7 @@ const PointsGuide = () => {
     { 
       name: 'Expert', 
       points: 500, 
-      description: 'Recognized subject matter expert',
+      description: 'Earned at 500 points milestone',
       color: 'from-purple-400 to-indigo-500',
       bgColor: 'bg-purple-50 dark:bg-purple-900/20',
       borderColor: 'border-purple-300 dark:border-purple-700',
@@ -140,7 +140,7 @@ const PointsGuide = () => {
     { 
       name: 'Master', 
       points: 1000, 
-      description: 'Master of wireless communication',
+      description: 'Earned at 1000 points milestone',
       color: 'from-orange-400 to-red-500',
       bgColor: 'bg-gradient-to-br from-orange-50 to-red-50 dark:from-orange-900/20 dark:to-red-900/20',
       borderColor: 'border-orange-400 dark:border-orange-600',
@@ -153,7 +153,7 @@ const PointsGuide = () => {
     { 
       name: 'Legend', 
       points: 2000, 
-      description: 'Top 10 contributor',
+      description: 'Earned at 2000 points milestone',
       color: 'from-yellow-400 via-amber-500 to-orange-500',
       bgColor: 'bg-gradient-to-br from-yellow-50 via-amber-50 to-orange-50 dark:from-yellow-900/20 dark:via-amber-900/20 dark:to-orange-900/20',
       borderColor: 'border-yellow-400 dark:border-yellow-600',
@@ -167,7 +167,7 @@ const PointsGuide = () => {
     { 
       name: 'Elite', 
       points: 3000, 
-      description: 'Elite community member',
+      description: 'Earned at 3000 points milestone',
       color: 'from-pink-400 via-rose-500 to-red-500',
       bgColor: 'bg-gradient-to-br from-pink-50 via-rose-50 to-red-50 dark:from-pink-900/30 dark:via-rose-900/30 dark:to-red-900/30',
       borderColor: 'border-pink-400 dark:border-pink-600',
@@ -181,7 +181,7 @@ const PointsGuide = () => {
     { 
       name: 'Guru', 
       points: 5000, 
-      description: 'Ultimate knowledge guru',
+      description: 'Earned at 5000 points milestone',
       color: 'from-purple-500 via-fuchsia-500 to-pink-500',
       bgColor: 'bg-gradient-to-br from-purple-50 via-fuchsia-50 to-pink-50 dark:from-purple-900/30 dark:via-fuchsia-900/30 dark:to-pink-900/30',
       borderColor: 'border-purple-500 dark:border-purple-600',

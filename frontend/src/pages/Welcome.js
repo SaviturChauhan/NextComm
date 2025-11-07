@@ -58,28 +58,32 @@ const Welcome = () => {
       title: "Ask Questions",
       description: "Get help with wireless communication concepts from experts and peers.",
       color: "from-blue-500 to-cyan-500",
-      bgColor: "bg-blue-50 dark:bg-blue-900/20"
+      bgColor: "bg-blue-50 dark:bg-blue-900/20",
+      link: isAuthenticated ? "/ask" : "/register"
     },
     {
       icon: <FiUsers className="w-10 h-10" />,
       title: "Community Learning",
       description: "Connect with fellow students and professionals in the field.",
       color: "from-purple-500 to-pink-500",
-      bgColor: "bg-purple-50 dark:bg-purple-900/20"
+      bgColor: "bg-purple-50 dark:bg-purple-900/20",
+      link: isAuthenticated ? "/dashboard" : "/register"
     },
     {
       icon: <FiAward className="w-10 h-10" />,
       title: "Earn Points",
       description: "Build your reputation by asking great questions and providing helpful answers.",
       color: "from-yellow-500 to-orange-500",
-      bgColor: "bg-yellow-50 dark:bg-yellow-900/20"
+      bgColor: "bg-yellow-50 dark:bg-yellow-900/20",
+      link: "/points-guide"
     },
     {
       icon: <FiZap className="w-10 h-10" />,
       title: "Real-time Help",
       description: "Get instant answers to your wireless communication questions.",
       color: "from-green-500 to-emerald-500",
-      bgColor: "bg-green-50 dark:bg-green-900/20"
+      bgColor: "bg-green-50 dark:bg-green-900/20",
+      link: isAuthenticated ? "/dashboard" : "/register"
     }
   ];
 
@@ -204,9 +208,10 @@ const Welcome = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             {features.map((feature, index) => (
-              <div
+              <Link
                 key={index}
-                className={`group relative ${feature.bgColor} p-8 rounded-2xl border-2 border-transparent hover:border-primary/50 transition-all duration-300 hover:shadow-2xl hover:-translate-y-2`}
+                to={feature.link}
+                className={`group relative ${feature.bgColor} p-8 rounded-2xl border-2 border-transparent hover:border-primary/50 transition-all duration-300 hover:shadow-2xl hover:-translate-y-2 cursor-pointer block`}
               >
                 <div className={`inline-flex p-4 rounded-xl bg-gradient-to-br ${feature.color} text-white mb-6 shadow-lg group-hover:scale-110 transition-transform duration-300`}>
                   {feature.icon}
@@ -217,7 +222,11 @@ const Welcome = () => {
                 <p className="text-gray-600 dark:text-gray-300 leading-relaxed">
                   {feature.description}
                 </p>
-              </div>
+                <div className="mt-4 flex items-center text-primary font-semibold opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                  <span>Learn more</span>
+                  <FiArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
+                </div>
+              </Link>
             ))}
           </div>
         </div>

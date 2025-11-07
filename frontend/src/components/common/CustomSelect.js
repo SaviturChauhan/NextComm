@@ -34,11 +34,38 @@ const CustomSelect = ({
     };
   }, [isOpen]);
 
-  const selectedOption = options.find(opt => opt.value === value) || options[0];
-  const displayValue = selectedOption ? selectedOption.label : placeholder;
+  // Handle both string and object options
+  const normalizeOptions = options.map(opt => {
+    if (typeof opt === 'string') {
+      return { value: opt, label: opt };
+    }
+    return opt;
+  });
+
+  // Find the selected option - check both value and label for matching
+  const selectedOption = normalizeOptions.find(opt => {
+    if (!value && value !== '') return false;
+    // Exact match on value
+    if (opt.value === value) return true;
+    // Match on label (useful when value is converted for display)
+    if (opt.label === value) return true;
+    // Case-insensitive match
+    if (typeof value === 'string' && typeof opt.value === 'string') {
+      if (opt.value.toLowerCase() === value.toLowerCase()) return true;
+      if (opt.label.toLowerCase() === value.toLowerCase()) return true;
+    }
+    return false;
+  });
+  
+  // Use the selected option's label if found, otherwise use the value or placeholder
+  const displayValue = selectedOption 
+    ? selectedOption.label 
+    : (value && normalizeOptions.length > 0 ? value : placeholder);
 
   const handleSelect = (optionValue) => {
-    onChange(optionValue);
+    // If option is an object, use its value; otherwise use the optionValue directly
+    const selectedOpt = normalizeOptions.find(opt => opt.value === optionValue || opt.label === optionValue);
+    onChange(selectedOpt ? selectedOpt.value : optionValue);
     setIsOpen(false);
   };
 
@@ -80,8 +107,8 @@ const CustomSelect = ({
             className="max-h-60 overflow-auto"
             role="listbox"
           >
-            {options.map((option, index) => {
-              const isSelected = value === option.value;
+            {normalizeOptions.map((option, index) => {
+              const isSelected = value === option.value || value === option.label;
               return (
                 <li
                   key={option.value || index}

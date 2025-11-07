@@ -10,7 +10,7 @@ const questionSchema = new mongoose.Schema({
   description: {
     type: String,
     required: true,
-    maxlength: 5000
+    maxlength: 15000
   },
   author: {
     type: mongoose.Schema.Types.ObjectId,

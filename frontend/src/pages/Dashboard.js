@@ -8,6 +8,7 @@ const Dashboard = () => {
   const [questions, setQuestions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+  const [questionType, setQuestionType] = useState('all'); // all, unanswered, noAccepted
   const [filters, setFilters] = useState({
     sortBy: 'newest',
     category: 'all',
@@ -26,23 +27,47 @@ const Dashboard = () => {
     if (search) {
       setSearchQuery(search);
     }
-    fetchQuestions();
   }, [searchParams]);
+
+  useEffect(() => {
+    fetchQuestions(1);
+  }, [questionType, filters, searchQuery]);
 
   const fetchQuestions = async (page = 1) => {
     try {
       setLoading(true);
-      const params = new URLSearchParams({
-        page: page.toString(),
-        limit: '10',
-        sortBy: filters.sortBy
-      });
-
-      if (searchQuery) params.append('search', searchQuery);
-      if (filters.category !== 'all') params.append('category', filters.category);
-      if (filters.difficulty !== 'all') params.append('difficulty', filters.difficulty);
-
-      const response = await axios.get(`/api/questions?${params}`);
+      let response;
+      
+      if (questionType === 'unanswered') {
+        const params = new URLSearchParams({
+          page: page.toString(),
+          limit: '10'
+        });
+        if (searchQuery) params.append('search', searchQuery);
+        if (filters.category !== 'all' && filters.category !== 'All Categories') params.append('category', filters.category);
+        if (filters.difficulty !== 'all' && filters.difficulty !== 'All Levels') params.append('difficulty', filters.difficulty);
+        response = await axios.get(`/api/unanswered/unanswered?${params}`);
+      } else if (questionType === 'noAccepted') {
+        const params = new URLSearchParams({
+          page: page.toString(),
+          limit: '10'
+        });
+        if (searchQuery) params.append('search', searchQuery);
+        if (filters.category !== 'all' && filters.category !== 'All Categories') params.append('category', filters.category);
+        if (filters.difficulty !== 'all' && filters.difficulty !== 'All Levels') params.append('difficulty', filters.difficulty);
+        response = await axios.get(`/api/unanswered/no-accepted-answer?${params}`);
+      } else {
+        const params = new URLSearchParams({
+          page: page.toString(),
+          limit: '10',
+          sortBy: filters.sortBy
+        });
+        if (searchQuery) params.append('search', searchQuery);
+        if (filters.category !== 'all') params.append('category', filters.category);
+        if (filters.difficulty !== 'all') params.append('difficulty', filters.difficulty);
+        response = await axios.get(`/api/questions?${params}`);
+      }
+      
       setQuestions(response.data.questions);
       setPagination(response.data.pagination);
     } catch (error) {
@@ -122,7 +147,7 @@ const Dashboard = () => {
           </div>
 
           {/* Search and Filters */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6 mb-8">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6 mb-6">
             <form onSubmit={handleSearch} className="mb-6">
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -139,38 +164,40 @@ const Dashboard = () => {
             </form>
 
             <div className="flex flex-wrap gap-4">
-              <div className="flex items-center gap-2">
-                <FiFilter className="h-4 w-4 text-gray-500 dark:text-gray-400" />
-                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Sort by:</span>
-                <div className="w-40">
-                  <CustomSelect
-                    value={filters.sortBy}
-                    onChange={(value) => handleFilterChange('sortBy', value)}
-                    options={[
-                      { value: 'newest', label: 'Newest' },
-                      { value: 'oldest', label: 'Oldest' },
-                      { value: 'mostVoted', label: 'Most Voted' },
-                      { value: 'mostAnswered', label: 'Most Answered' }
-                    ]}
-                  />
+              {questionType === 'all' && (
+                <div className="flex items-center gap-2">
+                  <FiFilter className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Sort by:</span>
+                  <div className="w-40">
+                    <CustomSelect
+                      value={filters.sortBy}
+                      onChange={(value) => handleFilterChange('sortBy', value)}
+                      options={[
+                        { value: 'newest', label: 'Newest' },
+                        { value: 'oldest', label: 'Oldest' },
+                        { value: 'mostVoted', label: 'Most Voted' },
+                        { value: 'mostAnswered', label: 'Most Answered' }
+                      ]}
+                    />
+                  </div>
                 </div>
-              </div>
+              )}
 
               <div className="flex items-center gap-2">
                 <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Category:</span>
                 <div className="w-56">
                   <CustomSelect
-                    value={filters.category}
-                    onChange={(value) => handleFilterChange('category', value)}
+                    value={filters.category === 'all' ? 'All Categories' : filters.category}
+                    onChange={(value) => handleFilterChange('category', value === 'All Categories' ? 'all' : value)}
                     options={[
-                      { value: 'all', label: 'All Categories' },
-                      { value: 'Introduction & Performance', label: 'Introduction & Performance' },
-                      { value: 'Wireless Channel Models', label: 'Wireless Channel Models' },
-                      { value: 'Diversity & Channel Capacity', label: 'Diversity & Channel Capacity' },
-                      { value: 'MIMO Systems', label: 'MIMO Systems' },
-                      { value: 'OFDM (Multi-carrier Modulation)', label: 'OFDM (Multi-carrier Modulation)' },
-                      { value: 'Cellular Standards', label: 'Cellular Standards' },
-                      { value: 'Other', label: 'Other' }
+                      'All Categories',
+                      'MIMO',
+                      'OFDM',
+                      '5G',
+                      'Signal Processing',
+                      'Antennas',
+                      'Wireless Networks',
+                      'Other'
                     ]}
                   />
                 </div>
@@ -180,17 +207,57 @@ const Dashboard = () => {
                 <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Difficulty:</span>
                 <div className="w-40">
                   <CustomSelect
-                    value={filters.difficulty}
-                    onChange={(value) => handleFilterChange('difficulty', value)}
-                    options={[
-                      { value: 'all', label: 'All Levels' },
-                      { value: 'beginner', label: 'Beginner' },
-                      { value: 'intermediate', label: 'Intermediate' },
-                      { value: 'advanced', label: 'Advanced' }
-                    ]}
+                    value={filters.difficulty === 'all' ? 'All Levels' : filters.difficulty}
+                    onChange={(value) => handleFilterChange('difficulty', value === 'All Levels' ? 'all' : value)}
+                    options={['All Levels', 'beginner', 'intermediate', 'advanced']}
                   />
                 </div>
               </div>
+            </div>
+          </div>
+
+          {/* Question Type Tabs */}
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 mb-6">
+            <div className="flex gap-2 border-b border-gray-200 dark:border-gray-700">
+              <button
+                onClick={() => {
+                  setQuestionType('all');
+                  setPagination({ ...pagination, currentPage: 1 });
+                }}
+                className={`px-4 py-2 font-medium text-sm transition-colors ${
+                  questionType === 'all'
+                    ? 'text-primary border-b-2 border-primary'
+                    : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
+                }`}
+              >
+                All Questions
+              </button>
+              <button
+                onClick={() => {
+                  setQuestionType('unanswered');
+                  setPagination({ ...pagination, currentPage: 1 });
+                }}
+                className={`px-4 py-2 font-medium text-sm transition-colors ${
+                  questionType === 'unanswered'
+                    ? 'text-primary border-b-2 border-primary'
+                    : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
+                }`}
+              >
+                Unanswered
+              </button>
+              <button
+                onClick={() => {
+                  setQuestionType('noAccepted');
+                  setPagination({ ...pagination, currentPage: 1 });
+                }}
+                className={`px-4 py-2 font-medium text-sm transition-colors ${
+                  questionType === 'noAccepted'
+                    ? 'text-primary border-b-2 border-primary'
+                    : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
+                }`}
+              >
+                Needs Answer
+              </button>
             </div>
           </div>
 
@@ -267,7 +334,13 @@ const Dashboard = () => {
                             
                             <div className="flex items-center gap-1">
                               <FiMessageSquare className="h-4 w-4" />
-                              <span>{question.answers?.length || 0} answers</span>
+                              <span>{question.answerCount || question.answers?.length || 0} answers</span>
+                              {questionType === 'noAccepted' && question.answerCount > 0 && (
+                                <span className="ml-1 text-xs text-yellow-600 dark:text-yellow-400">(no accepted)</span>
+                              )}
+                              {questionType === 'unanswered' && (
+                                <span className="ml-1 text-xs text-orange-600 dark:text-orange-400">(unanswered)</span>
+                              )}
                             </div>
                             
                             <div className="flex items-center gap-1">
@@ -292,9 +365,9 @@ const Dashboard = () => {
                           {question.tags.map((tag, index) => (
                             <span
                               key={index}
-                              className="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-xs rounded-full"
+                              className="inline-flex items-center px-3 py-1 bg-primary/10 dark:bg-primary/20 text-primary dark:text-primary-300 text-xs font-medium rounded-full border border-primary/20 dark:border-primary/30"
                             >
-                              #{tag}
+                              {tag}
                             </span>
                           ))}
                         </div>

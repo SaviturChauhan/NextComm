@@ -6,6 +6,11 @@ import { FiTag, FiAlertCircle } from 'react-icons/fi';
 import axios from 'axios';
 import toast from 'react-hot-toast';
 import CustomSelect from '../components/common/CustomSelect';
+import { createQuillModules, quillFormats } from '../utils/quillToolbar';
+import hljs from 'highlight.js';
+import FormulaModal from '../components/common/FormulaModal';
+import CodeModal from '../components/common/CodeModal';
+import DuplicateQuestionAlert from '../components/common/DuplicateQuestionAlert';
 
 const AskQuestion = () => {
   const [formData, setFormData] = useState({
@@ -17,28 +22,91 @@ const AskQuestion = () => {
   });
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
+  const [formulaModalOpen, setFormulaModalOpen] = useState(false);
+  const [codeModalOpen, setCodeModalOpen] = useState(false);
+  const [quillInstance, setQuillInstance] = useState(null);
+  const [quillRange, setQuillRange] = useState(null);
+  const [duplicates, setDuplicates] = useState([]);
+  const [checkingDuplicates, setCheckingDuplicates] = useState(false);
+  const [showDuplicateAlert, setShowDuplicateAlert] = useState(true);
+  const duplicateCheckTimeoutRef = useRef(null);
   const navigate = useNavigate();
 
-  // ReactQuill configuration with custom paste handler
-  const quillModules = React.useMemo(() => ({
-    toolbar: [
-      [{ 'header': [1, 2, 3, false] }],
-      ['bold', 'italic', 'underline', 'strike'],
-      [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-      ['blockquote', 'code-block'],
-      ['link', 'image'],
-      ['clean']
-    ],
-    clipboard: {
-      // Custom paste handler to preserve LaTeX formulas
-      matchVisual: false,
+  // Handle formula button click
+  const handleFormulaClick = (quill, range) => {
+    setQuillInstance(quill);
+    setQuillRange(range);
+    setFormulaModalOpen(true);
+  };
+
+  // Handle code button click
+  const handleCodeClick = (quill, range) => {
+    setQuillInstance(quill);
+    setQuillRange(range);
+    setCodeModalOpen(true);
+  };
+
+  // Enhanced ReactQuill configuration with LaTeX and Code buttons
+  const quillModules = React.useMemo(() => 
+    createQuillModules(handleFormulaClick, handleCodeClick), 
+    []
+  );
+
+  // Handle formula insertion
+  const handleFormulaConfirm = (formula, isBlock) => {
+    if (quillInstance && quillRange) {
+      const formulaText = isBlock ? `$$${formula}$$` : `$${formula}$`;
+      quillInstance.insertText(quillRange.index, formulaText, 'user');
+      quillInstance.setSelection(quillRange.index + formulaText.length);
     }
-  }), []);
+    setFormulaModalOpen(false);
+    setQuillInstance(null);
+    setQuillRange(null);
+  };
+
+  // Handle code insertion
+  const handleCodeConfirm = (code, language) => {
+    if (quillInstance && quillRange) {
+      // Get current line
+      const [line] = quillInstance.getLine(quillRange.index);
+      const lineStart = quillInstance.getIndex(line);
+      
+      // Insert newline before code block if not at start
+      let insertIndex = quillRange.index;
+      if (lineStart < quillRange.index) {
+        quillInstance.insertText(quillRange.index, '\n', 'user');
+        insertIndex = quillRange.index + 1;
+      }
+      
+      // Insert code
+      quillInstance.insertText(insertIndex, code + '\n', 'user');
+      
+      // Format as code block
+      const codeStart = insertIndex;
+      quillInstance.formatText(codeStart, code.length, 'code-block', true);
+      
+      // Try to set language attribute
+      try {
+        const codeBlock = quillInstance.getLine(codeStart)[0];
+        if (codeBlock && codeBlock.domNode) {
+          codeBlock.domNode.setAttribute('data-language', language);
+        }
+      } catch (e) {
+        // Ignore if we can't set attribute
+      }
+      
+      // Move cursor after code block
+      quillInstance.setSelection(codeStart + code.length + 1);
+    }
+    setCodeModalOpen(false);
+    setQuillInstance(null);
+    setQuillRange(null);
+  };
 
   // Custom paste handler ref
   const quillRef = useRef(null);
 
-  // Setup paste handler after Quill is initialized
+  // Setup paste handler and syntax highlighting after Quill is initialized
   useEffect(() => {
     if (quillRef.current) {
       const quill = quillRef.current.getEditor();
@@ -49,8 +117,6 @@ const AskQuestion = () => {
         
         // If text contains LaTeX formulas, preserve them
         if (text && text.includes('$')) {
-          // Keep the text as-is, ReactQuill will preserve it
-          // We'll render formulas when displaying content
           return delta;
         }
         
@@ -62,19 +128,79 @@ const AskQuestion = () => {
         if (node.tagName === 'P' || node.tagName === 'DIV') {
           const text = node.textContent || '';
           if (text.includes('$')) {
-            // Preserve formulas in HTML
             return delta;
           }
         }
         return delta;
       });
+
+      // Highlight code blocks on content change
+      const highlightCodeBlocks = () => {
+        const editor = quill.root;
+        const codeBlocks = editor.querySelectorAll('pre.ql-syntax, pre code');
+        codeBlocks.forEach((block) => {
+          const code = block.textContent || '';
+          const lang = block.getAttribute('data-language') || 
+                      block.className.match(/language-(\w+)/)?.[1] || 
+                      'plaintext';
+          
+          if (hljs.getLanguage(lang)) {
+            try {
+              const highlighted = hljs.highlight(code, { language: lang });
+              block.innerHTML = highlighted.value;
+              block.classList.add('hljs');
+              block.classList.add(`language-${lang}`);
+            } catch (e) {
+              // Keep original if highlighting fails
+            }
+          }
+        });
+      };
+
+      // Highlight on text change
+      quill.on('text-change', () => {
+        setTimeout(highlightCodeBlocks, 100);
+      });
     }
   }, []);
 
-  const quillFormats = [
-    'header', 'bold', 'italic', 'underline', 'strike',
-    'list', 'bullet', 'blockquote', 'code-block', 'link', 'image'
-  ];
+  // Debounced duplicate check
+  useEffect(() => {
+    // Clear previous timeout
+    if (duplicateCheckTimeoutRef.current) {
+      clearTimeout(duplicateCheckTimeoutRef.current);
+    }
+
+    // Set new timeout - only check if title is long enough
+    if (formData.title && formData.title.length >= 10) {
+      duplicateCheckTimeoutRef.current = setTimeout(async () => {
+        try {
+          setCheckingDuplicates(true);
+          const response = await axios.post('/api/ai/check-duplicates', {
+            title: formData.title,
+            description: formData.description || ''
+          });
+          setDuplicates(response.data.duplicates || []);
+        } catch (error) {
+          console.error('Error checking duplicates:', error);
+          // Silently fail - don't block user from posting
+          setDuplicates([]);
+        } finally {
+          setCheckingDuplicates(false);
+        }
+      }, 1000); // Wait 1 second after user stops typing
+    } else {
+      // Clear duplicates if title is too short
+      setDuplicates([]);
+      setCheckingDuplicates(false);
+    }
+
+    return () => {
+      if (duplicateCheckTimeoutRef.current) {
+        clearTimeout(duplicateCheckTimeoutRef.current);
+      }
+    };
+  }, [formData.title, formData.description]);
 
   const handleChange = (field, value) => {
     setFormData(prev => ({
@@ -88,6 +214,11 @@ const AskQuestion = () => {
         ...prev,
         [field]: ''
       }));
+    }
+
+    // Reset duplicate alert when title changes significantly
+    if (field === 'title' && duplicates.length > 0) {
+      setShowDuplicateAlert(true);
     }
   };
 
@@ -106,8 +237,8 @@ const AskQuestion = () => {
       newErrors.description = 'Description is required';
     } else if (formData.description.length < 20) {
       newErrors.description = 'Description must be at least 20 characters';
-    } else if (formData.description.length > 5000) {
-      newErrors.description = 'Description must be less than 5000 characters';
+    } else if (formData.description.length > 15000) {
+      newErrors.description = 'Description must be less than 15000 characters';
     }
 
     const tagsArray = formData.tags.split(',').map(tag => tag.trim()).filter(tag => tag);
@@ -166,6 +297,23 @@ const AskQuestion = () => {
               Get help from the community by asking a detailed question
             </p>
           </div>
+
+          {/* Duplicate Question Alert */}
+          {showDuplicateAlert && duplicates.length > 0 && (
+            <DuplicateQuestionAlert
+              duplicates={duplicates}
+              onDismiss={() => setShowDuplicateAlert(false)}
+              onViewDuplicate={() => setShowDuplicateAlert(false)}
+            />
+          )}
+
+          {/* Loading indicator for duplicate check */}
+          {checkingDuplicates && (
+            <div className="mb-4 text-sm text-gray-500 dark:text-gray-400 flex items-center gap-2">
+              <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+              Checking for similar questions...
+            </div>
+          )}
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
@@ -312,6 +460,28 @@ const AskQuestion = () => {
           </form>
         </div>
       </div>
+
+      {/* Formula Modal */}
+      <FormulaModal
+        isOpen={formulaModalOpen}
+        onClose={() => {
+          setFormulaModalOpen(false);
+          setQuillInstance(null);
+          setQuillRange(null);
+        }}
+        onConfirm={handleFormulaConfirm}
+      />
+
+      {/* Code Modal */}
+      <CodeModal
+        isOpen={codeModalOpen}
+        onClose={() => {
+          setCodeModalOpen(false);
+          setQuillInstance(null);
+          setQuillRange(null);
+        }}
+        onConfirm={handleCodeConfirm}
+      />
     </div>
   );
 };

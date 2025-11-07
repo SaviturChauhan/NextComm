@@ -4,6 +4,7 @@ const Answer = require('../models/Answer');
 const Question = require('../models/Question');
 const User = require('../models/User');
 const auth = require('../middleware/auth');
+const { notifyNewAnswer, processMentions, notifyUpvote, notifyBadgeEarned, notifyAnswerAccepted } = require('../utils/notifications');
 
 const router = express.Router();
 
@@ -52,13 +53,41 @@ router.post('/', auth, [
     );
     
     // Assign badges based on new points
+    let badgesBefore = [];
     if (updatedUser) {
+      badgesBefore = updatedUser.badges.map(b => b.name);
       updatedUser.assignBadges();
       await updatedUser.save();
     }
 
     // Populate author info
     await answer.populate('author', 'username avatar points');
+    await question.populate('author', 'username');
+
+    // Notify question author about new answer
+    if (question.author && question.author._id.toString() !== req.userId.toString()) {
+      await notifyNewAnswer(question, answer, updatedUser);
+    }
+
+    // Process mentions in answer content
+    if (content) {
+      await processMentions(content, updatedUser, 'answer', questionId);
+    }
+
+    // Check for new badges and notify
+    if (updatedUser) {
+      const badgesAfter = updatedUser.badges.map(b => b.name);
+      const newBadges = badgesAfter.filter(b => !badgesBefore.includes(b));
+      if (newBadges.length > 0) {
+        const { notifyBadgeEarned } = require('../utils/notifications');
+        for (const badgeName of newBadges) {
+          const badge = updatedUser.badges.find(b => b.name === badgeName);
+          if (badge) {
+            await notifyBadgeEarned(req.userId, badge.name, badge.description);
+          }
+        }
+      }
+    }
 
     res.status(201).json(answer);
   } catch (error) {
@@ -83,7 +112,11 @@ router.put('/:id', auth, [
       return res.status(404).json({ message: 'Answer not found' });
     }
 
-    if (answer.author.toString() !== req.userId) {
+    // Compare author IDs as strings to ensure proper comparison
+    const answerAuthorId = String(answer.author);
+    const userId = String(req.userId);
+
+    if (answerAuthorId !== userId) {
       return res.status(403).json({ message: 'Not authorized to update this answer' });
     }
 
@@ -230,8 +263,18 @@ router.post('/:id/vote', auth, [
 
     await answer.save();
 
+    // Get voter and question for notifications
+    const voter = await User.findById(req.userId);
+    const question = await Question.findById(answer.question);
+
     // Update answer author's points if there's a change
     if (pointsChange !== 0) {
+      let badgesBefore = [];
+      const answerAuthorUser = await User.findById(answer.author);
+      if (answerAuthorUser) {
+        badgesBefore = answerAuthorUser.badges.map(b => b.name);
+      }
+
       const updatedAuthor = await User.findByIdAndUpdate(
         answer.author,
         {
@@ -247,6 +290,25 @@ router.post('/:id/vote', auth, [
       if (updatedAuthor) {
         updatedAuthor.assignBadges();
         await updatedAuthor.save();
+
+        // Notify on upvote (only for new upvotes, not removals or downvotes)
+        if (voteType === 'upvote' && (!existingVote || existingVote.voteType !== 'upvote')) {
+          if (voter && question) {
+            await notifyUpvote('answer', answer, voter, question._id);
+          }
+        }
+
+        // Check for new badges and notify
+        const badgesAfter = updatedAuthor.badges.map(b => b.name);
+        const newBadges = badgesAfter.filter(b => !badgesBefore.includes(b));
+        if (newBadges.length > 0) {
+          for (const badgeName of newBadges) {
+            const badge = updatedAuthor.badges.find(b => b.name === badgeName);
+            if (badge) {
+              await notifyBadgeEarned(answer.author, badge.name, badge.description);
+            }
+          }
+        }
       }
     }
 
@@ -293,7 +355,18 @@ router.post('/:id/accept', auth, async (req, res) => {
     await answer.save();
     await question.save();
 
+    // Get question author and answer author for notifications
+    await question.populate('author', 'username');
+    await answer.populate('author', 'username');
+    const questionAuthor = await User.findById(question.author);
+    const answerAuthor = await User.findById(answer.author);
+
     // Award points to answer author
+    let badgesBefore = [];
+    if (answerAuthor) {
+      badgesBefore = answerAuthor.badges.map(b => b.name);
+    }
+
     const updatedAuthor = await User.findByIdAndUpdate(
       answer.author,
       { 
@@ -306,6 +379,24 @@ router.post('/:id/accept', auth, async (req, res) => {
     if (updatedAuthor) {
       updatedAuthor.assignBadges();
       await updatedAuthor.save();
+
+      // Notify answer author about acceptance
+      if (questionAuthor && question) {
+        await notifyAnswerAccepted(answer, questionAuthor, question.title);
+      }
+
+      // Check for new badges and notify
+      const badgesAfter = updatedAuthor.badges.map(b => b.name);
+      const newBadges = badgesAfter.filter(b => !badgesBefore.includes(b));
+      if (newBadges.length > 0) {
+        const { notifyBadgeEarned } = require('../utils/notifications');
+        for (const badgeName of newBadges) {
+          const badge = updatedAuthor.badges.find(b => b.name === badgeName);
+          if (badge) {
+            await notifyBadgeEarned(answer.author, badge.name, badge.description);
+          }
+        }
+      }
     }
 
     res.json({ message: 'Answer accepted successfully' });

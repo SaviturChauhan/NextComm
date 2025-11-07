@@ -1,19 +1,39 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { FiMessageSquare, FiClock, FiThumbsUp, FiCheck, FiEdit3, FiTrash2 } from 'react-icons/fi';
+import { FiMessageSquare, FiClock, FiThumbsUp, FiCheck, FiEdit3, FiTrash2, FiBookmark, FiSave, FiX, FiCamera } from 'react-icons/fi';
 import axios from 'axios';
+import toast from 'react-hot-toast';
+import BadgeModal from '../components/common/BadgeModal';
+import AvatarEditor from '../components/common/AvatarEditor';
+import { useAuth } from '../contexts/AuthContext';
+import { renderFormulas } from '../utils/formulaHandler';
 
 const UserProfile = () => {
   const { id } = useParams();
+  const { user: currentUser } = useAuth();
   const [profile, setProfile] = useState(null);
   const [recentQuestions, setRecentQuestions] = useState([]);
   const [recentAnswers, setRecentAnswers] = useState([]);
+  const [bookmarks, setBookmarks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('questions');
+  const [selectedBadge, setSelectedBadge] = useState(null);
+  const [isBadgeModalOpen, setIsBadgeModalOpen] = useState(false);
+  const [isEditingUsername, setIsEditingUsername] = useState(false);
+  const [editedUsername, setEditedUsername] = useState('');
+  const [savingUsername, setSavingUsername] = useState(false);
+  const [isAvatarEditorOpen, setIsAvatarEditorOpen] = useState(false);
+  const isOwnProfile = currentUser && (currentUser._id === id || currentUser.id === id);
 
   useEffect(() => {
     fetchProfile();
   }, [id]);
+
+  useEffect(() => {
+    if (isOwnProfile) {
+      fetchBookmarks();
+    }
+  }, [isOwnProfile]);
 
   const fetchProfile = async () => {
     try {
@@ -27,6 +47,90 @@ const UserProfile = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const fetchBookmarks = async () => {
+    try {
+      const response = await axios.get('/api/bookmarks');
+      setBookmarks(response.data.bookmarks || []);
+    } catch (error) {
+      console.error('Error fetching bookmarks:', error);
+    }
+  };
+
+  const handleEditUsername = () => {
+    setEditedUsername(profile.username);
+    setIsEditingUsername(true);
+  };
+
+  const handleCancelEditUsername = () => {
+    setIsEditingUsername(false);
+    setEditedUsername('');
+  };
+
+  const handleSaveUsername = async () => {
+    if (!editedUsername.trim()) {
+      toast.error('Username cannot be empty');
+      return;
+    }
+
+    if (editedUsername.trim() === profile.username) {
+      setIsEditingUsername(false);
+      return;
+    }
+
+    // Validate username format
+    const usernameRegex = /^[a-zA-Z0-9_]+$/;
+    if (!usernameRegex.test(editedUsername.trim())) {
+      toast.error('Username can only contain letters, numbers, and underscores');
+      return;
+    }
+
+    if (editedUsername.trim().length < 3 || editedUsername.trim().length > 30) {
+      toast.error('Username must be between 3 and 30 characters');
+      return;
+    }
+
+    try {
+      setSavingUsername(true);
+      const response = await axios.put('/api/auth/profile', {
+        username: editedUsername.trim()
+      });
+
+      // Update profile state
+      setProfile(prev => ({
+        ...prev,
+        username: response.data.username
+      }));
+
+      // Update current user in auth context if it's the same user
+      if (currentUser && (currentUser._id === id || currentUser.id === id)) {
+        // The auth context will be updated on next refresh, but we can trigger a refetch
+        window.location.reload(); // Simple way to refresh user data
+      }
+
+      setIsEditingUsername(false);
+      toast.success('Username updated successfully!');
+    } catch (error) {
+      console.error('Error updating username:', error);
+      const errorMessage = error.response?.data?.message || 
+                          error.response?.data?.errors?.[0]?.msg || 
+                          'Failed to update username';
+      toast.error(errorMessage);
+    } finally {
+      setSavingUsername(false);
+    }
+  };
+
+  const handleAvatarSave = (newAvatar) => {
+    setProfile(prev => ({
+      ...prev,
+      avatar: newAvatar
+    }));
+    // Refresh the page to update avatar everywhere
+    setTimeout(() => {
+      window.location.reload();
+    }, 500);
   };
 
   const formatDate = (dateString) => {
@@ -88,16 +192,76 @@ const UserProfile = () => {
           {/* Profile Header */}
           <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 mb-8">
             <div className="flex flex-col md:flex-row items-center md:items-start gap-6">
-              <img
-                src={profile.avatar || `https://ui-avatars.com/api/?name=${profile.username}&background=1193d4&color=fff`}
-                alt={profile.username}
-                className="w-32 h-32 rounded-full border-4 border-white dark:border-gray-800 shadow-md"
-              />
+              <div className="relative group">
+                <img
+                  src={profile.avatar || `https://ui-avatars.com/api/?name=${profile.username}&background=1193d4&color=fff`}
+                  alt={profile.username}
+                  className="w-32 h-32 rounded-full border-4 border-white dark:border-gray-800 shadow-md object-cover"
+                />
+                {isOwnProfile && (
+                  <button
+                    onClick={() => setIsAvatarEditorOpen(true)}
+                    className="absolute bottom-0 right-0 p-2 bg-primary text-white rounded-full shadow-lg hover:bg-primary/90 transition-all opacity-0 group-hover:opacity-100 transform translate-y-2 group-hover:translate-y-0"
+                    title="Change profile photo"
+                  >
+                    <FiCamera className="w-4 h-4" />
+                  </button>
+                )}
+              </div>
               
               <div className="flex-1 text-center md:text-left">
-                <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-                  {profile.username}
-                </h1>
+                <div className="flex items-center justify-center md:justify-start gap-3 mb-2">
+                  {isEditingUsername ? (
+                    <div className="flex items-center gap-2 flex-1 max-w-md">
+                      <input
+                        type="text"
+                        value={editedUsername}
+                        onChange={(e) => setEditedUsername(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            handleSaveUsername();
+                          } else if (e.key === 'Escape') {
+                            handleCancelEditUsername();
+                          }
+                        }}
+                        className="flex-1 px-3 py-2 text-3xl font-bold text-gray-900 dark:text-white bg-gray-100 dark:bg-gray-700 border-2 border-primary rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                        autoFocus
+                        disabled={savingUsername}
+                      />
+                      <button
+                        onClick={handleSaveUsername}
+                        disabled={savingUsername}
+                        className="p-2 text-green-600 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/20 rounded-lg transition-colors disabled:opacity-50"
+                        title="Save username"
+                      >
+                        <FiSave className="w-5 h-5" />
+                      </button>
+                      <button
+                        onClick={handleCancelEditUsername}
+                        disabled={savingUsername}
+                        className="p-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors disabled:opacity-50"
+                        title="Cancel"
+                      >
+                        <FiX className="w-5 h-5" />
+                      </button>
+                    </div>
+                  ) : (
+                    <>
+                      <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+                        {profile.username}
+                      </h1>
+                      {isOwnProfile && (
+                        <button
+                          onClick={handleEditUsername}
+                          className="p-2 text-gray-600 dark:text-gray-400 hover:text-primary hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                          title="Edit username"
+                        >
+                          <FiEdit3 className="w-5 h-5" />
+                        </button>
+                      )}
+                    </>
+                  )}
+                </div>
                 <p className="text-gray-600 dark:text-gray-400 mb-4">
                   {profile.bio || 'Wireless Communication Enthusiast'}
                 </p>
@@ -172,18 +336,38 @@ const UserProfile = () => {
                 {profile.badges.map((badge, index) => (
                   <div
                     key={index}
-                    className="flex items-center gap-3 p-3 bg-primary/10 rounded-lg"
+                    onClick={() => {
+                      setSelectedBadge(badge);
+                      setIsBadgeModalOpen(true);
+                    }}
+                    className="flex items-center gap-3 p-3 bg-primary/10 rounded-lg cursor-pointer hover:bg-primary/20 transition-all duration-200 transform hover:scale-105 hover:shadow-md"
                   >
-                    <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
-                      <span className="text-white text-sm font-bold">🏆</span>
+                    <div className="w-12 h-12 bg-primary rounded-full flex items-center justify-center text-2xl flex-shrink-0">
+                      {(() => {
+                        const lowerName = badge.name.toLowerCase();
+                        if (lowerName.includes('beginner')) return '🌱';
+                        if (lowerName.includes('contributor')) return '📝';
+                        if (lowerName.includes('scholar')) return '📚';
+                        if (lowerName.includes('expert')) return '⭐';
+                        if (lowerName.includes('master')) return '🏆';
+                        if (lowerName.includes('legend')) return '👑';
+                        if (lowerName.includes('elite')) return '💎';
+                        if (lowerName.includes('guru')) return '🧙';
+                        return '🎖️';
+                      })()}
                     </div>
-                    <div>
+                    <div className="flex-1 min-w-0">
                       <div className="font-medium text-gray-900 dark:text-white">
                         {badge.name}
                       </div>
-                      <div className="text-sm text-gray-600 dark:text-gray-400">
+                      <div className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2">
                         {badge.description}
                       </div>
+                      {badge.earnedAt && (
+                        <div className="text-xs text-gray-500 dark:text-gray-500 mt-1">
+                          Earned {new Date(badge.earnedAt).toLocaleDateString()}
+                        </div>
+                      )}
                     </div>
                   </div>
                 ))}
@@ -215,11 +399,88 @@ const UserProfile = () => {
                 >
                   Answers ({recentAnswers.length})
                 </button>
+                {isOwnProfile && (
+                  <button
+                    onClick={() => setActiveTab('saved')}
+                    className={`px-6 py-4 text-sm font-medium border-b-2 transition-colors ${
+                      activeTab === 'saved'
+                        ? 'border-primary text-primary'
+                        : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+                    }`}
+                  >
+                    <span className="flex items-center gap-2">
+                      <FiBookmark className="w-4 h-4" />
+                      Saved ({bookmarks.length})
+                    </span>
+                  </button>
+                )}
               </nav>
             </div>
 
             <div className="p-6">
-              {activeTab === 'questions' ? (
+              {activeTab === 'saved' ? (
+                <div className="space-y-4">
+                  {bookmarks.length === 0 ? (
+                    <div className="text-center py-8">
+                      <FiBookmark className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+                      <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+                        No saved items yet
+                      </h3>
+                      <p className="text-gray-500 dark:text-gray-400">
+                        Start bookmarking questions and answers to find them here
+                      </p>
+                      <Link
+                        to="/dashboard"
+                        className="mt-4 inline-block px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors"
+                      >
+                        Browse Questions
+                      </Link>
+                    </div>
+                  ) : (
+                    bookmarks.map((bookmark) => (
+                      <div
+                        key={bookmark._id}
+                        className="p-4 rounded-lg bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
+                      >
+                        {bookmark.question ? (
+                          <div>
+                            <Link
+                              to={`/question/${bookmark.question._id}`}
+                              className="text-sm font-medium text-gray-900 dark:text-white hover:text-primary transition-colors line-clamp-2"
+                            >
+                              {bookmark.question.title}
+                            </Link>
+                            <div className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                              Question • {formatDate(bookmark.createdAt)}
+                            </div>
+                          </div>
+                        ) : bookmark.answer ? (
+                          <div>
+                            <Link
+                              to={`/question/${bookmark.answer.question?._id || bookmark.answer.question || 'unknown'}`}
+                              className="text-sm font-medium text-gray-900 dark:text-white hover:text-primary transition-colors line-clamp-2"
+                            >
+                              Answer to: {bookmark.answer.question?.title || 'Question'}
+                            </Link>
+                            <div className="mt-1 text-xs text-gray-500 dark:text-gray-400 line-clamp-2">
+                              {bookmark.answer.content ? (
+                                typeof bookmark.answer.content === 'string' ? (
+                                  <span dangerouslySetInnerHTML={{ __html: bookmark.answer.content.substring(0, 100) + '...' }} />
+                                ) : (
+                                  bookmark.answer.content
+                                )
+                              ) : 'No preview available'}
+                            </div>
+                            <div className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                              Answer • {formatDate(bookmark.createdAt)}
+                            </div>
+                          </div>
+                        ) : null}
+                      </div>
+                    ))
+                  )}
+                </div>
+              ) : activeTab === 'questions' ? (
                 <div className="space-y-4">
                   {recentQuestions.length === 0 ? (
                     <div className="text-center py-8">
@@ -324,6 +585,29 @@ const UserProfile = () => {
           </div>
         </div>
       </div>
+
+      {/* Badge Modal */}
+      <BadgeModal
+        badge={selectedBadge}
+        isOpen={isBadgeModalOpen}
+        onClose={() => {
+          setIsBadgeModalOpen(false);
+          setSelectedBadge(null);
+        }}
+        userName={profile.username}
+      />
+
+      {/* Avatar Editor Modal */}
+      {isOwnProfile && profile && (
+        <AvatarEditor
+          isOpen={isAvatarEditorOpen}
+          onClose={() => setIsAvatarEditorOpen(false)}
+          currentAvatar={profile.avatar}
+          onSave={handleAvatarSave}
+          userId={profile._id || profile.id}
+          username={profile.username}
+        />
+      )}
     </div>
   );
 };

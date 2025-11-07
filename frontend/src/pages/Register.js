@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { FiEye, FiEyeOff, FiMail, FiLock, FiUser } from 'react-icons/fi';
+import { FcGoogle } from 'react-icons/fc';
 
 const Register = () => {
   const [formData, setFormData] = useState({
@@ -107,8 +108,12 @@ const Register = () => {
         <div className="bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 dark:border-gray-700/50 p-8 md:p-10">
           <div className="text-center mb-8">
             <div className="mx-auto h-16 w-16 bg-gradient-to-br from-primary to-blue-600 rounded-2xl flex items-center justify-center shadow-lg mb-6">
-              <svg className="h-10 w-10 text-white" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+              {/* Wireless Communication Icon - Radio Signal Waves */}
+              <svg className="h-10 w-10 text-white" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="2" fill="currentColor"/>
+                <circle cx="12" cy="12" r="5" stroke="currentColor" opacity="0.8"/>
+                <circle cx="12" cy="12" r="8" stroke="currentColor" opacity="0.6"/>
+                <circle cx="12" cy="12" r="11" stroke="currentColor" opacity="0.4"/>
               </svg>
             </div>
             <h2 className="text-4xl font-extrabold text-gray-900 dark:text-white mb-3">
@@ -293,6 +298,36 @@ const Register = () => {
             </button>
           </div>
         </form>
+
+          {/* Divider */}
+          <div className="mt-6">
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-gray-300 dark:border-gray-600"></div>
+              </div>
+              <div className="relative flex justify-center text-sm">
+                <span className="px-2 bg-white dark:bg-gray-900 text-gray-500 dark:text-gray-400">
+                  Or continue with
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Google Sign-In Button */}
+          <div className="mt-6">
+            <button
+              type="button"
+              onClick={() => {
+                // Use full backend URL for OAuth
+                const backendUrl = process.env.REACT_APP_API_URL || 'http://localhost:5001';
+                window.location.href = `${backendUrl}/api/auth/google`;
+              }}
+              className="w-full flex items-center justify-center gap-3 py-3 px-4 border-2 border-gray-300 dark:border-gray-600 rounded-xl text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-all duration-200 shadow-sm hover:shadow-md"
+            >
+              <FcGoogle className="w-5 h-5" />
+              <span className="font-semibold">Sign up with Google</span>
+            </button>
+          </div>
         </div>
       </div>
     </div>

@@ -2,8 +2,6 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { 
   FiMail, 
-  FiPhone, 
-  FiMapPin, 
   FiArrowUp,
   FiGithub,
   FiTwitter,
@@ -55,24 +53,6 @@ const Footer = () => {
       { name: 'Ask Question', path: '/ask' },
       { name: 'Leaderboard', path: '/leaderboard' },
       { name: 'How to Earn Points', path: '/points-guide' }
-    ],
-    resources: [
-      { name: 'Study Guides', path: '#' },
-      { name: 'Tutorials', path: '#' },
-      { name: 'Documentation', path: '#' },
-      { name: 'Community Guidelines', path: '#' }
-    ],
-    company: [
-      { name: 'About Us', path: '#' },
-      { name: 'Contact', path: '#' },
-      { name: 'Careers', path: '#' },
-      { name: 'Blog', path: '#' }
-    ],
-    legal: [
-      { name: 'Privacy Policy', path: '#' },
-      { name: 'Terms of Service', path: '#' },
-      { name: 'Cookie Policy', path: '#' },
-      { name: 'Disclaimer', path: '#' }
     ]
   };
 
@@ -98,21 +78,25 @@ const Footer = () => {
 
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Main Footer Content */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-8 mb-12">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
           
-          {/* Brand & Newsletter Section - Spans 2 columns */}
+          {/* Brand & Newsletter Section */}
           <div className="lg:col-span-2">
             {/* Logo */}
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
-                <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+              <div className="w-10 h-10 bg-gradient-to-br from-primary to-blue-600 rounded-xl flex items-center justify-center shadow-lg">
+                {/* Wireless Communication Icon - Radio Signal Waves */}
+                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <circle cx="12" cy="12" r="2" fill="currentColor"/>
+                  <circle cx="12" cy="12" r="5" stroke="currentColor" opacity="0.8"/>
+                  <circle cx="12" cy="12" r="8" stroke="currentColor" opacity="0.6"/>
+                  <circle cx="12" cy="12" r="11" stroke="currentColor" opacity="0.4"/>
                 </svg>
               </div>
               <span className="text-2xl font-bold text-white">NextComm</span>
             </div>
 
-            <p className="text-gray-400 mb-6 text-sm leading-relaxed">
+            <p className="text-gray-400 mb-6 text-sm leading-relaxed max-w-md">
               Your go-to platform for wireless communication learning. Connect with experts, 
               ask questions, and build your knowledge in wireless channel models, MIMO systems, OFDM, and more.
             </p>
@@ -123,7 +107,7 @@ const Footer = () => {
                 <FiMail className="w-4 h-4 text-primary" />
                 Subscribe to Newsletter
               </h4>
-              <form onSubmit={handleNewsletterSubmit} className="flex gap-2">
+              <form onSubmit={handleNewsletterSubmit} className="flex gap-2 max-w-md">
                 <input
                   type="email"
                   value={email}
@@ -183,80 +167,6 @@ const Footer = () => {
               ))}
             </ul>
           </div>
-
-          {/* Resources Links */}
-          <div>
-            <h3 className="text-white font-semibold mb-4 text-sm uppercase tracking-wider">Resources</h3>
-            <ul className="space-y-3">
-              {footerLinks.resources.map((link, index) => (
-                <li key={index}>
-                  <Link
-                    to={link.path}
-                    className="text-gray-400 hover:text-primary transition-colors text-sm flex items-center gap-2 group"
-                  >
-                    <span className="w-0 group-hover:w-2 h-0.5 bg-primary transition-all duration-300"></span>
-                    {link.name}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* Company Links */}
-          <div>
-            <h3 className="text-white font-semibold mb-4 text-sm uppercase tracking-wider">Company</h3>
-            <ul className="space-y-3">
-              {footerLinks.company.map((link, index) => (
-                <li key={index}>
-                  <Link
-                    to={link.path}
-                    className="text-gray-400 hover:text-primary transition-colors text-sm flex items-center gap-2 group"
-                  >
-                    <span className="w-0 group-hover:w-2 h-0.5 bg-primary transition-all duration-300"></span>
-                    {link.name}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* Contact Info & Legal */}
-          <div>
-            <h3 className="text-white font-semibold mb-4 text-sm uppercase tracking-wider">Contact</h3>
-            <ul className="space-y-3 mb-6">
-              <li className="flex items-start gap-3 text-gray-400 text-sm">
-                <FiMail className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
-                <a href="mailto:support@nextcomm.com" className="hover:text-primary transition-colors">
-                  support@nextcomm.com
-                </a>
-              </li>
-              <li className="flex items-start gap-3 text-gray-400 text-sm">
-                <FiPhone className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
-                <a href="tel:+1234567890" className="hover:text-primary transition-colors">
-                  +1 (234) 567-890
-                </a>
-              </li>
-              <li className="flex items-start gap-3 text-gray-400 text-sm">
-                <FiMapPin className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
-                <span>123 Tech Street, Innovation City, IN 12345</span>
-              </li>
-            </ul>
-
-            <h3 className="text-white font-semibold mb-4 text-sm uppercase tracking-wider">Legal</h3>
-            <ul className="space-y-3">
-              {footerLinks.legal.slice(0, 2).map((link, index) => (
-                <li key={index}>
-                  <Link
-                    to={link.path}
-                    className="text-gray-400 hover:text-primary transition-colors text-sm flex items-center gap-2 group"
-                  >
-                    <span className="w-0 group-hover:w-2 h-0.5 bg-primary transition-all duration-300"></span>
-                    {link.name}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
         </div>
 
         {/* Divider */}
@@ -271,19 +181,6 @@ const Footer = () => {
             <p className="text-gray-500 text-sm flex items-center gap-2">
               Made with <FiHeart className="text-red-500 w-4 h-4 animate-pulse" /> for Wireless Communication Students
             </p>
-
-            {/* Additional Legal Links */}
-            <div className="flex gap-6 text-sm">
-              {footerLinks.legal.slice(2).map((link, index) => (
-                <Link
-                  key={index}
-                  to={link.path}
-                  className="text-gray-500 hover:text-primary transition-colors"
-                >
-                  {link.name}
-                </Link>
-              ))}
-            </div>
           </div>
         </div>
       </div>

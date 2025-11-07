@@ -11,7 +11,8 @@ import {
   FiCheck, 
   FiEdit3,
   FiTrash2,
-  FiArrowLeft
+  FiArrowLeft,
+  FiZap
 } from 'react-icons/fi';
 import axios from 'axios';
 import toast from 'react-hot-toast';
@@ -19,6 +20,12 @@ import { useAuth } from '../contexts/AuthContext';
 import { preserveFormulasOnPaste, renderFormulas } from '../utils/formulaHandler';
 import { InlineMath, BlockMath } from 'react-katex';
 import ConfirmModal from '../components/common/ConfirmModal';
+import FormulaModal from '../components/common/FormulaModal';
+import CodeModal from '../components/common/CodeModal';
+import AISuggestionModal from '../components/common/AISuggestionModal';
+import BookmarkButton from '../components/common/BookmarkButton';
+import { createQuillModules, quillFormats } from '../utils/quillToolbar';
+import hljs from 'highlight.js';
 
 // Question Details Component - View and interact with questions
 const QuestionDetails = () => {
@@ -30,6 +37,16 @@ const QuestionDetails = () => {
   const [answerContent, setAnswerContent] = useState('');
   const [submittingAnswer, setSubmittingAnswer] = useState(false);
   const [voting, setVoting] = useState({});
+  const [formulaModalOpen, setFormulaModalOpen] = useState(false);
+  const [codeModalOpen, setCodeModalOpen] = useState(false);
+  const [aiSuggestionModalOpen, setAiSuggestionModalOpen] = useState(false);
+  const [answerQuillInstance, setAnswerQuillInstance] = useState(null);
+  const [answerQuillRange, setAnswerQuillRange] = useState(null);
+  const [editingAnswerId, setEditingAnswerId] = useState(null);
+  const [editAnswerContent, setEditAnswerContent] = useState('');
+  const [editAnswerQuillInstance, setEditAnswerQuillInstance] = useState(null);
+  const [editAnswerQuillRange, setEditAnswerQuillRange] = useState(null);
+  const [savingAnswer, setSavingAnswer] = useState(false);
   const [confirmModal, setConfirmModal] = useState({
     isOpen: false,
     title: '',
@@ -39,26 +56,143 @@ const QuestionDetails = () => {
     confirmButtonColor: 'bg-red-500 hover:bg-red-600'
   });
 
-  // ReactQuill configuration with custom paste handler
-  const quillModules = React.useMemo(() => ({
-    toolbar: [
-      [{ 'header': [1, 2, 3, false] }],
-      ['bold', 'italic', 'underline', 'strike'],
-      [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-      ['blockquote', 'code-block'],
-      ['link', 'image'],
-      ['clean']
-    ],
-    clipboard: {
-      // Custom paste handler to preserve LaTeX formulas
-      matchVisual: false,
+  // Handle formula button click
+  const handleFormulaClick = (quill, range) => {
+    setAnswerQuillInstance(quill);
+    setAnswerQuillRange(range);
+    setFormulaModalOpen(true);
+  };
+
+  // Handle code button click
+  const handleCodeClick = (quill, range) => {
+    setAnswerQuillInstance(quill);
+    setAnswerQuillRange(range);
+    setCodeModalOpen(true);
+  };
+
+  // Handle formula button click in edit mode
+  const handleEditFormulaClick = (quill, range) => {
+    setEditAnswerQuillInstance(quill);
+    setEditAnswerQuillRange(range);
+    setFormulaModalOpen(true);
+  };
+
+  // Handle code button click in edit mode
+  const handleEditCodeClick = (quill, range) => {
+    setEditAnswerQuillInstance(quill);
+    setEditAnswerQuillRange(range);
+    setCodeModalOpen(true);
+  };
+
+  // Enhanced ReactQuill configuration with LaTeX and Code buttons
+  const quillModules = React.useMemo(() => 
+    createQuillModules(handleFormulaClick, handleCodeClick), 
+    []
+  );
+
+  // Edit mode ReactQuill configuration
+  const editQuillModules = React.useMemo(() => 
+    createQuillModules(handleEditFormulaClick, handleEditCodeClick), 
+    []
+  );
+
+  // Handle formula insertion
+  const handleFormulaConfirm = (formula, isBlock) => {
+    // Check if we're in edit mode
+    if (editAnswerQuillInstance && editAnswerQuillRange) {
+      const formulaText = isBlock ? `$$${formula}$$` : `$${formula}$`;
+      editAnswerQuillInstance.insertText(editAnswerQuillRange.index, formulaText, 'user');
+      editAnswerQuillInstance.setSelection(editAnswerQuillRange.index + formulaText.length);
+      setFormulaModalOpen(false);
+      setEditAnswerQuillInstance(null);
+      setEditAnswerQuillRange(null);
+      return;
     }
-  }), []);
+    
+    if (answerQuillInstance && answerQuillRange) {
+      const formulaText = isBlock ? `$$${formula}$$` : `$${formula}$`;
+      answerQuillInstance.insertText(answerQuillRange.index, formulaText, 'user');
+      answerQuillInstance.setSelection(answerQuillRange.index + formulaText.length);
+    }
+    setFormulaModalOpen(false);
+    setAnswerQuillInstance(null);
+    setAnswerQuillRange(null);
+  };
+
+  // Handle code insertion
+  const handleCodeConfirm = (code, language) => {
+    // Check if we're in edit mode
+    if (editAnswerQuillInstance && editAnswerQuillRange) {
+      // Get current line
+      const [line] = editAnswerQuillInstance.getLine(editAnswerQuillRange.index);
+      const lineStart = editAnswerQuillInstance.getIndex(line);
+      
+      // Insert newline before code block if not at start
+      let insertIndex = editAnswerQuillRange.index;
+      if (lineStart < editAnswerQuillRange.index) {
+        editAnswerQuillInstance.insertText(editAnswerQuillRange.index, '\n', 'user');
+        insertIndex = editAnswerQuillRange.index + 1;
+      }
+      
+      // Insert code block using HTML
+      const codeBlock = `<pre><code data-language="${language}">${code.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</code></pre>`;
+      editAnswerQuillInstance.clipboard.dangerouslyPasteHTML(insertIndex, codeBlock);
+      setCodeModalOpen(false);
+      setEditAnswerQuillInstance(null);
+      setEditAnswerQuillRange(null);
+      return;
+    }
+    
+    if (answerQuillInstance && answerQuillRange) {
+      // Get current line
+      const [line] = answerQuillInstance.getLine(answerQuillRange.index);
+      const lineStart = answerQuillInstance.getIndex(line);
+      
+      // Insert newline before code block if not at start
+      let insertIndex = answerQuillRange.index;
+      if (lineStart < answerQuillRange.index) {
+        answerQuillInstance.insertText(answerQuillRange.index, '\n', 'user');
+        insertIndex = answerQuillRange.index + 1;
+      }
+      
+      // Insert code
+      answerQuillInstance.insertText(insertIndex, code + '\n', 'user');
+      
+      // Format as code block
+      const codeStart = insertIndex;
+      answerQuillInstance.formatText(codeStart, code.length, 'code-block', true);
+      
+      // Try to set language attribute
+      try {
+        const codeBlock = answerQuillInstance.getLine(codeStart)[0];
+        if (codeBlock && codeBlock.domNode) {
+          codeBlock.domNode.setAttribute('data-language', language);
+        }
+      } catch (e) {
+        // Ignore if we can't set attribute
+      }
+      
+      // Move cursor after code block
+      answerQuillInstance.setSelection(codeStart + code.length + 1);
+    }
+    setCodeModalOpen(false);
+    setAnswerQuillInstance(null);
+    setAnswerQuillRange(null);
+  };
+
+  // Handle AI suggestion
+  const handleUseAISuggestion = (suggestion) => {
+    // Insert AI suggestion into answer editor (Quill accepts HTML)
+    if (suggestion) {
+      setAnswerContent(suggestion);
+      toast.success('AI suggestion inserted. Please review and edit before posting.');
+    }
+  };
 
   // Custom paste handler ref
   const quillRef = useRef(null);
 
-  // Setup paste handler after Quill is initialized
+  // Setup paste handler and syntax highlighting after Quill is initialized
   useEffect(() => {
     if (quillRef.current) {
       const quill = quillRef.current.getEditor();
@@ -69,8 +203,6 @@ const QuestionDetails = () => {
         
         // If text contains LaTeX formulas, preserve them
         if (text && text.includes('$')) {
-          // Keep the text as-is, ReactQuill will preserve it
-          // We'll render formulas when displaying content
           return delta;
         }
         
@@ -82,22 +214,41 @@ const QuestionDetails = () => {
         if (node.tagName === 'P' || node.tagName === 'DIV') {
           const text = node.textContent || '';
           if (text.includes('$')) {
-            // Preserve formulas in HTML
             return delta;
           }
         }
         return delta;
       });
+
+      // Highlight code blocks on content change
+      const highlightCodeBlocks = () => {
+        const editor = quill.root;
+        const codeBlocks = editor.querySelectorAll('pre.ql-syntax, pre code');
+        codeBlocks.forEach((block) => {
+          const code = block.textContent || '';
+          const lang = block.getAttribute('data-language') || 
+                      block.className.match(/language-(\w+)/)?.[1] || 
+                      'plaintext';
+          
+          if (hljs.getLanguage(lang)) {
+            try {
+              const highlighted = hljs.highlight(code, { language: lang });
+              block.innerHTML = highlighted.value;
+              block.classList.add('hljs');
+              block.classList.add(`language-${lang}`);
+            } catch (e) {
+              // Keep original if highlighting fails
+            }
+          }
+        });
+      };
+
+      // Highlight on text change
+      quill.on('text-change', () => {
+        setTimeout(highlightCodeBlocks, 100);
+      });
     }
   }, []);
-
-  const quillFormats = [
-    'header',
-    'bold', 'italic', 'underline', 'strike',
-    'list', 'bullet',
-    'blockquote', 'code-block',
-    'link', 'image'
-  ];
 
   useEffect(() => {
     fetchQuestion();
@@ -307,6 +458,57 @@ const QuestionDetails = () => {
     });
   };
 
+  // Handle edit answer
+  const handleEditAnswer = (answerId) => {
+    const answer = question.answers.find(a => a._id === answerId);
+    if (answer) {
+      setEditingAnswerId(answerId);
+      setEditAnswerContent(answer.content);
+    }
+  };
+
+  // Handle save edited answer
+  const handleSaveEditAnswer = async () => {
+    if (!editAnswerContent.trim()) {
+      toast.error('Answer cannot be empty');
+      return;
+    }
+
+    try {
+      setSavingAnswer(true);
+      const response = await axios.put(`/api/answers/${editingAnswerId}`, {
+        content: editAnswerContent
+      });
+
+      // Update the answer in the question state
+      setQuestion(prev => ({
+        ...prev,
+        answers: prev.answers.map(answer =>
+          answer._id === editingAnswerId
+            ? { ...answer, content: response.data.content, isEdited: true, editedAt: response.data.editedAt }
+            : answer
+        )
+      }));
+
+      setEditingAnswerId(null);
+      setEditAnswerContent('');
+      toast.success('Answer updated successfully');
+    } catch (error) {
+      console.error('Error updating answer:', error);
+      toast.error(error.response?.data?.message || 'Failed to update answer');
+    } finally {
+      setSavingAnswer(false);
+    }
+  };
+
+  // Handle cancel edit
+  const handleCancelEdit = () => {
+    setEditingAnswerId(null);
+    setEditAnswerContent('');
+    setEditAnswerQuillInstance(null);
+    setEditAnswerQuillRange(null);
+  };
+
   const formatDate = (dateString) => {
     const date = new Date(dateString);
     const now = new Date();
@@ -327,19 +529,58 @@ const QuestionDetails = () => {
     }
   };
 
-  // Component to render content with LaTeX formulas
+  // Component to render content with LaTeX formulas and syntax highlighting
   const renderContentWithFormulas = (htmlContent) => {
     if (!htmlContent) return null;
 
     try {
-      // Check if content contains LaTeX formulas by looking at the raw HTML
-      if (!htmlContent.includes('$')) {
-        return <div className="prose dark:prose-invert max-w-none mb-4" dangerouslySetInnerHTML={{ __html: htmlContent }} />;
+      // Process code blocks for syntax highlighting first
+      let processedContent = htmlContent;
+      const codeBlockRegex = /<pre[^>]*><code[^>]*>([\s\S]*?)<\/code><\/pre>/g;
+      const codeBlocks = [];
+      let codeMatch;
+      
+      while ((codeMatch = codeBlockRegex.exec(htmlContent)) !== null) {
+        const fullMatch = codeMatch[0];
+        const code = codeMatch[1];
+        const langMatch = fullMatch.match(/data-language="(\w+)"|class="[^"]*language-(\w+)/);
+        const language = langMatch ? (langMatch[1] || langMatch[2]) : 'plaintext';
+        
+        if (hljs.getLanguage(language)) {
+          try {
+            const highlighted = hljs.highlight(code, { language });
+            codeBlocks.push({
+              original: fullMatch,
+              replacement: `<pre style="max-width: 100% !important; width: 100% !important; overflow-x: auto; overflow-y: hidden; box-sizing: border-box !important; margin: 1rem 0; padding: 1rem; background-color: #1e1e1e; color: #d4d4d4; border-radius: 0.375rem; border: 1px solid rgba(0, 0, 0, 0.1);"><code class="hljs language-${language}" style="display: block; overflow-x: auto; white-space: pre; word-wrap: normal; max-width: 100% !important; width: 100% !important; box-sizing: border-box !important; padding: 0; background-color: transparent;">${highlighted.value}</code></pre>`
+            });
+          } catch (e) {
+            // Keep original if highlighting fails
+          }
+        }
+      }
+      
+      // Replace code blocks with highlighted versions
+      codeBlocks.forEach(({ original, replacement }) => {
+        processedContent = processedContent.replace(original, replacement);
+      });
+
+      // Check if content contains LaTeX formulas
+      if (!processedContent.includes('$')) {
+        return <div className="prose dark:prose-invert max-w-none mb-4 overflow-hidden" style={{ maxWidth: '100%', width: '100%' }} dangerouslySetInnerHTML={{ __html: processedContent }} />;
       }
 
       // Process HTML content to find and replace formulas
       // We'll replace $...$ and $$...$$ patterns with KaTeX rendered versions
-      let processedContent = htmlContent;
+      
+      // Decode HTML entities before processing formulas
+      const decodeHtmlEntities = (str) => {
+        const textarea = document.createElement('textarea');
+        textarea.innerHTML = str;
+        return textarea.value;
+      };
+      
+      // Decode HTML entities in processed content
+      processedContent = decodeHtmlEntities(processedContent);
       
       // Find all formulas in the content
       const inlineFormulaRegex = /\$([^$\n]+?)\$/g;
@@ -348,11 +589,19 @@ const QuestionDetails = () => {
       // First, handle block formulas ($$...$$) - they take precedence
       const blockMatches = [];
       let blockMatch;
-      while ((blockMatch = blockFormulaRegex.exec(htmlContent)) !== null) {
+      while ((blockMatch = blockFormulaRegex.exec(processedContent)) !== null) {
+        // Clean up the formula - decode HTML entities and fix common issues
+        let formula = blockMatch[1].trim();
+        formula = formula.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&');
+        formula = formula.replace(/\*{/g, '_{'); // Fix \overline{\gamma}*{ -> \overline{\gamma}_{
+        formula = formula.replace(/\\sum\*{/g, '\\sum_{'); // Fix \sum*{ -> \sum_{
+        formula = formula.replace(/\\mathbb\{E\}\\big\[,([^,]+),([^,]+),\\big\]/g, '\\mathbb{E}[$1$2]'); // Fix \mathbb{E}\big[,|h_i|,|h_j|,\big]
+        formula = formula.replace(/1\]\)/g, ''); // Remove trailing 1])
+        
         blockMatches.push({
           index: blockMatch.index,
           length: blockMatch[0].length,
-          formula: blockMatch[1].trim(),
+          formula: formula,
           isBlock: true,
           original: blockMatch[0]
         });
@@ -361,15 +610,19 @@ const QuestionDetails = () => {
       // Then handle inline formulas ($...$), excluding those inside block formulas
       const inlineMatches = [];
       let inlineMatch;
-      while ((inlineMatch = inlineFormulaRegex.exec(htmlContent)) !== null) {
+      while ((inlineMatch = inlineFormulaRegex.exec(processedContent)) !== null) {
         const isInsideBlock = blockMatches.some(bm => 
           inlineMatch.index >= bm.index && inlineMatch.index < bm.index + bm.length
         );
         if (!isInsideBlock) {
+          // Clean up the formula
+          let formula = inlineMatch[1].trim();
+          formula = formula.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&');
+          
           inlineMatches.push({
             index: inlineMatch.index,
             length: inlineMatch[0].length,
-            formula: inlineMatch[1].trim(),
+            formula: formula,
             isBlock: false,
             original: inlineMatch[0]
           });
@@ -380,7 +633,7 @@ const QuestionDetails = () => {
       const allMatches = [...blockMatches, ...inlineMatches].sort((a, b) => a.index - b.index);
       
       if (allMatches.length === 0) {
-        return <div className="prose dark:prose-invert max-w-none mb-4" dangerouslySetInnerHTML={{ __html: htmlContent }} />;
+        return <div className="prose dark:prose-invert max-w-none mb-4 overflow-hidden" style={{ maxWidth: '100%', width: '100%' }} dangerouslySetInnerHTML={{ __html: processedContent }} />;
       }
       
       // Replace formulas with placeholders, then render
@@ -399,23 +652,23 @@ const QuestionDetails = () => {
       const parts = processedContent.split(/(__FORMULA_\d+__)/);
       
       return (
-        <div className="prose dark:prose-invert max-w-none mb-4">
+        <div className="prose dark:prose-invert max-w-none mb-4 overflow-hidden" style={{ maxWidth: '100%', width: '100%' }}>
           {parts.map((part, idx) => {
             const replacement = replacements.find(r => part === r.placeholder);
             if (replacement) {
               if (replacement.isBlock) {
                 try {
-                  return <BlockMath key={idx} math={replacement.formula} />;
+                  return <BlockMath key={idx} math={replacement.formula} errorColor="#cc0000" />;
                 } catch (e) {
-                  console.error('Error rendering block formula:', e);
-                  return <div key={idx} className="font-mono my-4">$${replacement.formula}$$</div>;
+                  console.error('Error rendering block formula:', e, replacement.formula);
+                  return <div key={idx} className="font-mono my-4 text-red-500 p-2 bg-red-50 dark:bg-red-900/20 rounded">$${replacement.formula}$$</div>;
                 }
               } else {
                 try {
-                  return <InlineMath key={idx} math={replacement.formula} />;
+                  return <InlineMath key={idx} math={replacement.formula} errorColor="#cc0000" />;
                 } catch (e) {
-                  console.error('Error rendering inline formula:', e);
-                  return <span key={idx} className="font-mono">${replacement.formula}$</span>;
+                  console.error('Error rendering inline formula:', e, replacement.formula);
+                  return <span key={idx} className="font-mono text-red-500">${replacement.formula}$</span>;
                 }
               }
             } else if (part) {
@@ -428,7 +681,7 @@ const QuestionDetails = () => {
     } catch (error) {
       console.error('Error rendering content with formulas:', error);
       // Fallback to simple HTML rendering if formula processing fails
-      return <div className="prose dark:prose-invert max-w-none mb-4" dangerouslySetInnerHTML={{ __html: htmlContent }} />;
+      return <div className="prose dark:prose-invert max-w-none mb-4 overflow-hidden" style={{ maxWidth: '100%', width: '100%' }} dangerouslySetInnerHTML={{ __html: htmlContent }} />;
     }
   };
 
@@ -487,7 +740,7 @@ const QuestionDetails = () => {
             </div>
 
           {/* Question */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6 mb-8">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6 mb-8 overflow-hidden">
             <div className="flex items-start gap-4">
               <div className="flex-shrink-0">
                 <div className="w-12 h-12 bg-primary/10 dark:bg-primary/20 rounded-lg flex items-center justify-center">
@@ -495,12 +748,15 @@ const QuestionDetails = () => {
                 </div>
               </div>
               
-              <div className="flex-1">
+              <div className="flex-1 min-w-0">
                 <div className="flex items-start justify-between mb-4">
-                  <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+                  <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex-1">
                     {question.title}
                   </h1>
-                  <div className="flex items-center gap-2 ml-4">
+                  <div className="flex items-center gap-2 ml-4 flex-shrink-0">
+                    {isAuthenticated && (
+                      <BookmarkButton questionId={question._id} size="md" />
+                    )}
                     <span className={`px-2 py-1 rounded-full text-xs font-medium ${getDifficultyColor(question.difficulty)}`}>
                       {question.difficulty}
                     </span>
@@ -510,7 +766,9 @@ const QuestionDetails = () => {
                   </div>
                 </div>
 
+                <div className="w-full overflow-hidden" style={{ maxWidth: '100%', wordWrap: 'break-word' }}>
                 {renderContentWithFormulas(question.description)}
+                </div>
 
                 <div className="flex flex-wrap items-center gap-4 text-sm text-gray-500 dark:text-gray-300 mb-4">
                   <Link
@@ -546,9 +804,9 @@ const QuestionDetails = () => {
                     {question.tags.map((tag, index) => (
                       <span
                         key={index}
-                        className="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-xs rounded-full"
+                        className="inline-flex items-center px-3 py-1 bg-primary/10 dark:bg-primary/20 text-primary dark:text-primary-300 text-xs font-medium rounded-full border border-primary/20 dark:border-primary/30"
                       >
-                        #{tag}
+                        {tag}
                       </span>
                     ))}
                   </div>
@@ -606,7 +864,7 @@ const QuestionDetails = () => {
               {question.answers?.map((answer) => (
                 <div
                   key={answer._id}
-                  className={`p-6 rounded-lg border ${
+                  className={`p-6 rounded-lg border overflow-hidden ${
                     answer.isAccepted 
                       ? 'border-green-500 bg-green-50 dark:bg-green-900/20' 
                       : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800'
@@ -630,7 +888,7 @@ const QuestionDetails = () => {
                       />
                     </Link>
                     
-                    <div className="flex-1">
+                    <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-2">
                         <Link
                           to={`/profile/${answer.author?._id}`}
@@ -646,9 +904,45 @@ const QuestionDetails = () => {
                         )}
                       </div>
                       
-                      {renderContentWithFormulas(answer.content)}
-                      
-                      <div className="flex items-center justify-between">
+                      {editingAnswerId === answer._id ? (
+                        // Edit mode
+                        <div className="mb-4">
+                          <ReactQuill
+                            theme="snow"
+                            value={editAnswerContent}
+                            onChange={setEditAnswerContent}
+                            modules={editQuillModules}
+                            formats={quillFormats}
+                            placeholder="Edit your answer..."
+                            className="bg-white dark:bg-gray-700 rounded-lg"
+                            style={{ minHeight: '200px' }}
+                          />
+                          <div className="flex items-center justify-end gap-3 mt-4">
+                            <button
+                              onClick={handleCancelEdit}
+                              disabled={savingAnswer}
+                              className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg transition-colors disabled:opacity-50"
+                            >
+                              Cancel
+                            </button>
+                            <button
+                              onClick={handleSaveEditAnswer}
+                              disabled={savingAnswer || !editAnswerContent.trim()}
+                              className="px-4 py-2 text-sm font-medium text-white bg-primary hover:bg-primary/90 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                              {savingAnswer ? 'Saving...' : 'Save Changes'}
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <>
+                          {/* Display mode */}
+                          <div className="w-full overflow-hidden" style={{ maxWidth: '100%', wordWrap: 'break-word' }}>
+                            {renderContentWithFormulas(answer.content)}
+                          </div>
+                          
+                          {/* Voting and action buttons - only show in display mode */}
+                          <div className="flex items-center justify-between mt-4">
                         <div className="flex items-center gap-4">
                           {(() => {
                             const userVote = answer.votes?.voters?.find(v => v.user === user?.id);
@@ -688,6 +982,11 @@ const QuestionDetails = () => {
                         </div>
                         
                         <div className="flex items-center gap-3">
+                          {/* Bookmark Button */}
+                          {isAuthenticated && (
+                            <BookmarkButton answerId={answer._id} size="sm" />
+                          )}
+                          
                           {/* Accept Answer Button - Only visible to question author */}
                           {isAuthenticated && 
                            question.author && 
@@ -711,6 +1010,19 @@ const QuestionDetails = () => {
                             </span>
                           )}
                           
+                          {/* Edit Answer Button - Only visible to answer author */}
+                          {isAuthenticated && 
+                           answer.author && 
+                           (String(answer.author._id) === String(user?.id || user?._id)) && (
+                            <button
+                              onClick={() => handleEditAnswer(answer._id)}
+                              className="flex items-center gap-1 px-3 py-2 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors text-sm border border-blue-300 dark:border-blue-800"
+                            >
+                              <FiEdit3 className="w-4 h-4" />
+                              Edit
+                            </button>
+                          )}
+                          
                           {/* Delete Answer Button - Only visible to answer author */}
                           {isAuthenticated && 
                            answer.author && 
@@ -723,8 +1035,10 @@ const QuestionDetails = () => {
                               Delete
                             </button>
                           )}
+                          </div>
                         </div>
-                      </div>
+                      </>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -735,9 +1049,19 @@ const QuestionDetails = () => {
           {/* Answer Form */}
           {isAuthenticated && (
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+              <div className="mb-4 flex items-center justify-between">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
                 Your Answer
               </h3>
+                  <button
+                    type="button"
+                    onClick={() => setAiSuggestionModalOpen(true)}
+                    className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg hover:from-purple-600 hover:to-pink-600 transition-all duration-200 font-medium text-sm shadow-md hover:shadow-lg transform hover:scale-105"
+                  >
+                    <FiZap className="w-4 h-4" />
+                    Get AI Suggestion
+                  </button>
+              </div>
               
               <form onSubmit={handleSubmitAnswer}>
                 <div className="mb-4 quill-wrapper">
@@ -768,6 +1092,17 @@ const QuestionDetails = () => {
         </div>
       </div>
 
+      {/* AI Suggestion Modal */}
+      {question && (
+        <AISuggestionModal
+          isOpen={aiSuggestionModalOpen}
+          onClose={() => setAiSuggestionModalOpen(false)}
+          onUseSuggestion={handleUseAISuggestion}
+          questionTitle={question.title}
+          questionId={question._id}
+        />
+      )}
+
       {/* Confirmation Modal */}
       <ConfirmModal
         isOpen={confirmModal.isOpen}
@@ -777,6 +1112,28 @@ const QuestionDetails = () => {
         message={confirmModal.message}
         confirmText={confirmModal.confirmText}
         confirmButtonColor={confirmModal.confirmButtonColor}
+      />
+
+      {/* Formula Modal */}
+      <FormulaModal
+        isOpen={formulaModalOpen}
+        onClose={() => {
+          setFormulaModalOpen(false);
+          setAnswerQuillInstance(null);
+          setAnswerQuillRange(null);
+        }}
+        onConfirm={handleFormulaConfirm}
+      />
+
+      {/* Code Modal */}
+      <CodeModal
+        isOpen={codeModalOpen}
+        onClose={() => {
+          setCodeModalOpen(false);
+          setAnswerQuillInstance(null);
+          setAnswerQuillRange(null);
+        }}
+        onConfirm={handleCodeConfirm}
       />
     </div>
   );

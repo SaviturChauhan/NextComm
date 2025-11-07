@@ -4,6 +4,7 @@ const Question = require('../models/Question');
 const Answer = require('../models/Answer');
 const User = require('../models/User');
 const auth = require('../middleware/auth');
+const { processMentions, notifyUpvote, notifyBadgeEarned } = require('../utils/notifications');
 
 const router = express.Router();
 
@@ -126,7 +127,7 @@ router.get('/:id', async (req, res) => {
 // Create new question
 router.post('/', auth, [
   body('title').isLength({ min: 10, max: 200 }).withMessage('Title must be between 10 and 200 characters'),
-  body('description').isLength({ min: 20, max: 5000 }).withMessage('Description must be between 20 and 5000 characters'),
+  body('description').isLength({ min: 20, max: 15000 }).withMessage('Description must be between 20 and 15000 characters'),
   body('tags').isArray({ min: 1, max: 5 }).withMessage('Must provide 1-5 tags'),
   body('category').optional().isString(),
   body('difficulty').optional().isIn(['beginner', 'intermediate', 'advanced'])
@@ -151,6 +152,12 @@ router.post('/', auth, [
     await question.save();
 
     // Update user's questions count and award points for asking a question
+    let badgesBefore = [];
+    const userBefore = await User.findById(req.userId);
+    if (userBefore) {
+      badgesBefore = userBefore.badges.map(b => b.name);
+    }
+
     const updatedUser = await User.findByIdAndUpdate(
       req.userId,
       { 
@@ -169,6 +176,25 @@ router.post('/', auth, [
       await updatedUser.save();
     }
 
+    // Process mentions in question description
+    if (description) {
+      await processMentions(description, updatedUser, 'question', question._id);
+    }
+
+    // Check for new badges and notify
+    if (updatedUser) {
+      const badgesAfter = updatedUser.badges.map(b => b.name);
+      const newBadges = badgesAfter.filter(b => !badgesBefore.includes(b));
+      if (newBadges.length > 0) {
+        for (const badgeName of newBadges) {
+          const badge = updatedUser.badges.find(b => b.name === badgeName);
+          if (badge) {
+            await notifyBadgeEarned(req.userId, badge.name, badge.description);
+          }
+        }
+      }
+    }
+
     // Populate author info
     await question.populate('author', 'username avatar points');
 
@@ -182,7 +208,7 @@ router.post('/', auth, [
 // Update question
 router.put('/:id', auth, [
   body('title').optional().isLength({ min: 10, max: 200 }),
-  body('description').optional().isLength({ min: 20, max: 5000 }),
+  body('description').optional().isLength({ min: 20, max: 15000 }),
   body('tags').optional().isArray({ min: 1, max: 5 })
 ], async (req, res) => {
   try {
@@ -320,8 +346,17 @@ router.post('/:id/vote', auth, [
 
     await question.save();
 
+    // Get voter for notifications
+    const voter = await User.findById(req.userId);
+
     // Update question author's points if there's a change
     if (pointsChange !== 0) {
+      let badgesBefore = [];
+      const questionAuthorUser = await User.findById(question.author);
+      if (questionAuthorUser) {
+        badgesBefore = questionAuthorUser.badges.map(b => b.name);
+      }
+
       const updatedAuthor = await User.findByIdAndUpdate(
         question.author,
         {
@@ -337,6 +372,25 @@ router.post('/:id/vote', auth, [
       if (updatedAuthor) {
         updatedAuthor.assignBadges();
         await updatedAuthor.save();
+
+        // Notify on upvote (only for new upvotes, not removals or downvotes)
+        if (voteType === 'upvote' && (!existingVote || existingVote.voteType !== 'upvote')) {
+          if (voter) {
+            await notifyUpvote('question', question, voter);
+          }
+        }
+
+        // Check for new badges and notify
+        const badgesAfter = updatedAuthor.badges.map(b => b.name);
+        const newBadges = badgesAfter.filter(b => !badgesBefore.includes(b));
+        if (newBadges.length > 0) {
+          for (const badgeName of newBadges) {
+            const badge = updatedAuthor.badges.find(b => b.name === badgeName);
+            if (badge) {
+              await notifyBadgeEarned(question.author, badge.name, badge.description);
+            }
+          }
+        }
       }
     }
 

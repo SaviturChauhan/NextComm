@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider } from './contexts/AuthContext';
 import { ThemeProvider } from './contexts/ThemeContext';
+import { NotificationProvider } from './contexts/NotificationContext';
 import Navbar from './components/layout/Navbar';
 import Welcome from './pages/Welcome';
 import Dashboard from './pages/Dashboard';
@@ -13,20 +14,27 @@ import UserProfile from './pages/UserProfile';
 import PointsGuide from './pages/PointsGuide';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import GoogleCallback from './pages/GoogleCallback';
+import AdminDashboard from './pages/AdminDashboard';
+import About from './pages/About';
 import ProtectedRoute from './components/auth/ProtectedRoute';
+import AdminRoute from './components/auth/AdminRoute';
 
 function App() {
   return (
     <ThemeProvider>
       <AuthProvider>
-        <Router>
+        <NotificationProvider>
+          <Router>
           <div className="min-h-screen bg-background-light dark:bg-background-dark font-display">
             <Navbar />
             <main className="flex-1">
               <Routes>
                 <Route path="/" element={<Welcome />} />
+                <Route path="/about" element={<About />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Register />} />
+                <Route path="/auth/google/callback" element={<GoogleCallback />} />
                 <Route path="/dashboard" element={
                   <ProtectedRoute>
                     <Dashboard />
@@ -41,6 +49,11 @@ function App() {
                 <Route path="/leaderboard" element={<Leaderboard />} />
                 <Route path="/profile/:id" element={<UserProfile />} />
                 <Route path="/points-guide" element={<PointsGuide />} />
+                <Route path="/admin" element={
+                  <AdminRoute>
+                    <AdminDashboard />
+                  </AdminRoute>
+                } />
               </Routes>
             </main>
             <Toaster
@@ -91,6 +104,7 @@ function App() {
             />
           </div>
         </Router>
+        </NotificationProvider>
       </AuthProvider>
     </ThemeProvider>
   );

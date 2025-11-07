@@ -138,12 +138,34 @@ export const AuthProvider = ({ children }) => {
     dispatch({ type: 'UPDATE_USER', payload: userData });
   };
 
+  const setAuthToken = async (token) => {
+    try {
+      localStorage.setItem('token', token);
+      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+      
+      // Fetch user data
+      const response = await axios.get('/api/auth/me');
+      dispatch({
+        type: 'LOGIN_SUCCESS',
+        payload: {
+          user: response.data,
+          token: token
+        }
+      });
+    } catch (error) {
+      console.error('Error setting auth token:', error);
+      localStorage.removeItem('token');
+      dispatch({ type: 'LOGOUT' });
+    }
+  };
+
   const value = {
     ...state,
     login,
     register,
     logout,
-    updateUser
+    updateUser,
+    setAuthToken
   };
 
   return (

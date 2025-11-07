@@ -37,6 +37,171 @@
   to { transform: rotate(360deg); }
 }
 
+/* Badge Modal Animations */
+@keyframes badge-pop {
+  0% {
+    transform: scale(0) rotate(-180deg);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.1) rotate(10deg);
+  }
+  100% {
+    transform: scale(1) rotate(0deg);
+    opacity: 1;
+  }
+}
+
+@keyframes sparkle-1 {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+    opacity: 0;
+  }
+  50% {
+    transform: translate(10px, -15px) scale(1.5);
+    opacity: 1;
+  }
+}
+
+@keyframes sparkle-2 {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+    opacity: 0;
+  }
+  50% {
+    transform: translate(-12px, -10px) scale(1.3);
+    opacity: 1;
+  }
+}
+
+@keyframes sparkle-3 {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+    opacity: 0;
+  }
+  50% {
+    transform: translate(15px, 12px) scale(1.4);
+    opacity: 1;
+  }
+}
+
+@keyframes sparkle-4 {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+    opacity: 0;
+  }
+  50% {
+    transform: translate(-10px, 15px) scale(1.2);
+    opacity: 1;
+  }
+}
+
+@keyframes sparkle-5 {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+    opacity: 0;
+  }
+  50% {
+    transform: translate(-20px, 5px) scale(1.6);
+    opacity: 1;
+  }
+}
+
+@keyframes sparkle-6 {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+    opacity: 0;
+  }
+  50% {
+    transform: translate(18px, -8px) scale(1.3);
+    opacity: 1;
+  }
+}
+
+.animate-badge-pop {
+  animation: badge-pop 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards;
+}
+
+.animate-sparkle-1 {
+  animation: sparkle-1 2s ease-in-out infinite;
+  animation-delay: 0s;
+}
+
+.animate-sparkle-2 {
+  animation: sparkle-2 2s ease-in-out infinite;
+  animation-delay: 0.3s;
+}
+
+.animate-sparkle-3 {
+  animation: sparkle-3 2s ease-in-out infinite;
+  animation-delay: 0.6s;
+}
+
+.animate-sparkle-4 {
+  animation: sparkle-4 2s ease-in-out infinite;
+  animation-delay: 0.9s;
+}
+
+.animate-sparkle-5 {
+  animation: sparkle-5 2s ease-in-out infinite;
+  animation-delay: 1.2s;
+}
+
+.animate-sparkle-6 {
+  animation: sparkle-6 2s ease-in-out infinite;
+  animation-delay: 1.5s;
+}
+
+/* Gradient radial for spotlight effect */
+.bg-gradient-radial {
+  background: radial-gradient(circle, var(--tw-gradient-stops));
+}
+
+/* Expandable Search Animation */
+@keyframes search-expand {
+  0% {
+    width: 40px;
+    opacity: 0;
+  }
+  100% {
+    width: 300px;
+    opacity: 1;
+  }
+}
+
+/* Slide down animation for duplicate alert */
+@keyframes slide-down {
+  0% {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-slide-down {
+  animation: slide-down 0.3s ease-out forwards;
+}
+
+.animate-search-expand {
+  animation: search-expand 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  min-width: 300px;
+}
+
+@media (min-width: 640px) {
+  .animate-search-expand {
+    min-width: 350px;
+  }
+}
+
+@media (min-width: 768px) {
+  .animate-search-expand {
+    min-width: 400px;
+  }
+}
+
 /* Dark mode prose (rich text editor content) improvements */
 .dark .prose {
   color: #e5e7eb;
@@ -74,6 +239,72 @@
 .dark .prose pre {
   background-color: #1f2937;
   color: #e5e7eb;
+}
+
+/* Code block overflow and layout fixes for prose */
+.prose pre,
+.prose pre code,
+.dark .prose pre,
+.dark .prose pre code {
+  max-width: 100% !important;
+  overflow-x: auto !important;
+  overflow-y: hidden;
+  word-wrap: normal;
+  white-space: pre;
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+}
+
+.prose pre {
+  background-color: #1e1e1e;
+  color: #d4d4d4;
+  padding: 1rem;
+  border-radius: 0.375rem;
+  margin: 1rem 0;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  position: relative;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+.dark .prose pre {
+  background-color: #1e1e1e;
+  color: #d4d4d4;
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.prose pre code {
+  background-color: transparent;
+  padding: 0;
+  color: inherit;
+  font-size: 0.875rem;
+  line-height: 1.6;
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  overflow-x: auto;
+  white-space: pre;
+  word-wrap: normal;
+  box-sizing: border-box;
+}
+
+/* Ensure code blocks don't break container layout */
+.prose {
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+}
+
+.prose pre,
+.prose code {
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 /* ReactQuill dark mode styling */
@@ -192,6 +423,280 @@
 
 .dark .quill-wrapper .ql-toolbar {
   border-bottom-color: #4b5563;
+}
+
+/* Syntax Highlighting Styles */
+.ql-syntax {
+  background-color: #1e1e1e;
+  color: #d4d4d4;
+  padding: 1rem;
+  border-radius: 0.375rem;
+  overflow-x: auto;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+.dark .ql-syntax {
+  background-color: #1e1e1e;
+  color: #d4d4d4;
+}
+
+/* Code block styling */
+.ql-editor pre.ql-syntax {
+  background-color: #1e1e1e;
+  color: #d4d4d4;
+  padding: 1rem;
+  border-radius: 0.375rem;
+  overflow-x: auto;
+  overflow-y: hidden;
+  margin: 1rem 0;
+  max-width: 100%;
+  box-sizing: border-box;
+  position: relative;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.dark .ql-editor pre.ql-syntax {
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.ql-editor code {
+  background-color: rgba(0, 0, 0, 0.05);
+  padding: 0.125rem 0.25rem;
+  border-radius: 0.25rem;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 0.875em;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+.dark .ql-editor code {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.ql-editor pre {
+  margin: 1rem 0;
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  position: relative;
+}
+
+.ql-editor pre code {
+  background-color: transparent;
+  padding: 0;
+  display: block;
+  white-space: pre;
+  word-wrap: normal;
+  overflow-x: auto;
+  max-width: 100%;
+  width: 100%;
+  box-sizing: border-box;
+  min-width: 0;
+}
+
+/* Force Quill editor to respect container width */
+.ql-container,
+.ql-editor {
+  max-width: 100%;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.ql-editor {
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+.ql-editor pre {
+  width: 100%;
+  max-width: 100%;
+  margin-left: 0;
+  margin-right: 0;
+  padding-left: 1rem;
+  padding-right: 1rem;
+  box-sizing: border-box;
+}
+
+/* Highlight.js styles */
+.hljs {
+  display: block;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 1rem;
+  background: #1e1e1e;
+  color: #d4d4d4;
+  border-radius: 0.375rem;
+  max-width: 100%;
+  box-sizing: border-box;
+  white-space: pre;
+  word-wrap: normal;
+}
+
+.dark .hljs {
+  background: #1e1e1e;
+  color: #d4d4d4;
+}
+
+/* Ensure code blocks in rendered content are properly contained */
+.prose pre code.hljs,
+.prose pre code {
+  max-width: 100%;
+  overflow-x: auto;
+  display: block;
+  white-space: pre;
+  word-wrap: normal;
+}
+
+/* Container fixes to prevent code blocks from breaking layout */
+.prose {
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+  max-width: 100%;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.prose * {
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.prose pre {
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+/* Force code blocks to respect container boundaries */
+.prose p,
+.prose div,
+.prose section {
+  max-width: 100%;
+  overflow-x: hidden;
+  box-sizing: border-box;
+}
+
+.prose pre,
+.prose code {
+  contain: layout style;
+}
+
+/* Additional container constraints */
+.prose > * {
+  max-width: 100%;
+  overflow-x: hidden;
+  box-sizing: border-box;
+}
+
+.prose > pre {
+  overflow-x: auto;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  margin-left: 0;
+  margin-right: 0;
+}
+
+/* Ensure all nested elements respect boundaries */
+.prose pre code,
+.prose pre code * {
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+/* Fix for code blocks that might have inline styles overriding */
+.prose pre[style],
+.prose code[style] {
+  max-width: 100% !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+/* Smooth scrolling for code blocks */
+.prose pre,
+.ql-editor pre,
+.hljs {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(155, 155, 155, 0.5) transparent;
+}
+
+.prose pre::-webkit-scrollbar,
+.ql-editor pre::-webkit-scrollbar,
+.hljs::-webkit-scrollbar {
+  height: 8px;
+}
+
+.prose pre::-webkit-scrollbar-track,
+.ql-editor pre::-webkit-scrollbar-track,
+.hljs::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 4px;
+}
+
+.prose pre::-webkit-scrollbar-thumb,
+.ql-editor pre::-webkit-scrollbar-thumb,
+.hljs::-webkit-scrollbar-thumb {
+  background: rgba(155, 155, 155, 0.5);
+  border-radius: 4px;
+}
+
+.prose pre::-webkit-scrollbar-thumb:hover,
+.ql-editor pre::-webkit-scrollbar-thumb:hover,
+.hljs::-webkit-scrollbar-thumb:hover {
+  background: rgba(155, 155, 155, 0.7);
+}
+
+/* LaTeX Formula Styles */
+.ql-editor .latex-formula {
+  display: inline-block;
+  margin: 0 0.125rem;
+  padding: 0.125rem 0.25rem;
+  background-color: rgba(59, 130, 246, 0.1);
+  border-radius: 0.25rem;
+}
+
+.dark .ql-editor .latex-formula {
+  background-color: rgba(59, 130, 246, 0.2);
+}
+
+.ql-editor .latex-block {
+  display: block;
+  margin: 1rem 0;
+  padding: 1rem;
+  background-color: rgba(59, 130, 246, 0.05);
+  border-radius: 0.5rem;
+  text-align: center;
+  overflow-x: auto;
+}
+
+.dark .ql-editor .latex-block {
+  background-color: rgba(59, 130, 246, 0.1);
+}
+
+/* KaTeX rendering styles */
+.katex {
+  font-size: 1.1em;
+}
+
+.katex-display {
+  margin: 1rem 0;
+}
+
+/* Custom toolbar button icons */
+.ql-formula::before {
+  content: "Σ";
+  font-size: 1.2em;
+  font-weight: bold;
+}
+
+.ql-code::before {
+  content: "</>";
+  font-size: 0.9em;
+  font-weight: bold;
 }
 
 /* ============================================
