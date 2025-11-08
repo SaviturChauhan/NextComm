@@ -34,21 +34,14 @@ if (process.env.FRONTEND_URL) {
 }
 
 // Add Vercel preview deployment pattern (supports git branches, PR previews, etc.)
-// If FRONTEND_URL is a Vercel domain, allow all *.vercel.app subdomains for preview deployments
-if (process.env.FRONTEND_URL) {
-  const frontendDomain = process.env.FRONTEND_URL.replace('https://', '').replace('http://', '').split('/')[0];
-  
-  // Check if it's a Vercel domain
-  if (frontendDomain.includes('.vercel.app')) {
-    // Allow all Vercel preview deployments (*.vercel.app)
-    // This is safe because:
-    // 1. Only allows vercel.app domains (not arbitrary domains)
-    // 2. Vercel preview deployments are temporary and secure
-    // 3. Supports all preview deployment patterns (git branches, PRs, etc.)
-    allowedOrigins.push(/^https:\/\/.*\.vercel\.app$/);
-    console.log('✅ CORS: Added Vercel wildcard pattern for preview deployments');
-  }
-}
+// Always allow all *.vercel.app subdomains for preview deployments (if deployed on Vercel)
+// This is safe because:
+// 1. Only allows vercel.app domains (not arbitrary domains)
+// 2. Vercel preview deployments are temporary and secure
+// 3. Supports all preview deployment patterns (git branches, PRs, etc.)
+// 4. Works regardless of what FRONTEND_URL is set to
+allowedOrigins.push(/^https:\/\/.*\.vercel\.app$/);
+console.log('✅ CORS: Added Vercel wildcard pattern for all preview deployments');
 
 // Add localhost for development
 allowedOrigins.push('http://localhost:3000');
