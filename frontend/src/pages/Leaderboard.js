@@ -27,7 +27,7 @@ const Leaderboard = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [category]);
 
   const fetchTopUsers = async () => {
     try {
