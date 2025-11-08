@@ -24,10 +24,35 @@ const googleClientId = process.env.GOOGLE_CLIENT_ID?.trim();
 const googleClientSecret = process.env.GOOGLE_CLIENT_SECRET?.trim();
 
 if (googleClientId && googleClientSecret) {
+  // Get callback URL - must be full URL in production
+  // Priority: GOOGLE_CALLBACK_URL > BACKEND_URL > VERCEL_URL > localhost
+  let callbackURL = process.env.GOOGLE_CALLBACK_URL?.trim();
+  if (!callbackURL) {
+    // Try to get backend URL from environment
+    let backendUrl = process.env.BACKEND_URL?.trim();
+    if (!backendUrl) {
+      // In Vercel, VERCEL_URL is available but may not include protocol
+      const vercelUrl = process.env.VERCEL_URL;
+      if (vercelUrl) {
+        backendUrl = `https://${vercelUrl}`;
+      } else {
+        backendUrl = 'http://localhost:5001';
+      }
+    }
+    callbackURL = `${backendUrl}/api/auth/google/callback`;
+  }
+  
+  // Remove trailing slash if present
+  callbackURL = callbackURL.replace(/\/$/, '');
+  
+  console.log('🔵 Google OAuth Strategy initialized');
+  console.log('   Client ID:', googleClientId.substring(0, 20) + '...');
+  console.log('   Callback URL:', callbackURL);
+  
   passport.use(new GoogleStrategy({
     clientID: googleClientId,
     clientSecret: googleClientSecret,
-    callbackURL: process.env.GOOGLE_CALLBACK_URL?.trim() || '/api/auth/google/callback'
+    callbackURL: callbackURL
   }, async (accessToken, refreshToken, profile, done) => {
   try {
     console.log('Google OAuth strategy - Profile received:', {

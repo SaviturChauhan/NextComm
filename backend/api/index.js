@@ -66,14 +66,26 @@ app.use(express.urlencoded({ extended: true }));
 // MongoDB connection
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/nextcomm';
 
+if (!MONGODB_URI || MONGODB_URI === 'mongodb://localhost:27017/nextcomm') {
+  console.warn('⚠️  Warning: MONGODB_URI not set or using default. Database connection may fail in production.');
+}
+
 mongoose.connect(MONGODB_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
+  serverSelectionTimeoutMS: 5000, // Timeout after 5s instead of 30s
+  socketTimeoutMS: 45000, // Close sockets after 45s of inactivity
 })
-.then(() => console.log('✅ MongoDB connected successfully'))
+.then(() => {
+  console.log('✅ MongoDB connected successfully');
+  console.log('Database:', mongoose.connection.db.databaseName);
+})
 .catch(err => {
   console.error('❌ MongoDB connection error:', err);
+  console.error('Error name:', err.name);
+  console.error('Error message:', err.message);
   // Don't exit in serverless environment, just log the error
+  // The connection will be retried on next request
 });
 
 // Routes
@@ -108,12 +120,22 @@ app.get('/', (req, res) => {
 
 // Error handling middleware
 app.use((err, req, res, next) => {
-  console.error('Error:', err.stack);
+  console.error('❌ Unhandled error:', err);
+  console.error('Error name:', err.name);
+  console.error('Error message:', err.message);
+  console.error('Error stack:', err.stack);
+  console.error('Request URL:', req.url);
+  console.error('Request method:', req.method);
+  console.error('Request body:', req.body);
+  
   res.status(err.status || 500).json({ 
     message: process.env.NODE_ENV === 'production' 
       ? 'Internal server error' 
       : err.message,
-    ...(process.env.NODE_ENV !== 'production' && { stack: err.stack })
+    ...(process.env.NODE_ENV !== 'production' && { 
+      stack: err.stack,
+      name: err.name
+    })
   });
 });
 

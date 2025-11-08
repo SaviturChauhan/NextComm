@@ -66,23 +66,57 @@ router.post('/login', [
     const { email, password } = req.body;
 
     // Check if user exists
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ email: email.toLowerCase().trim() });
     if (!user) {
+      console.log('Login attempt: User not found for email:', email);
+      return res.status(400).json({ message: 'Invalid credentials' });
+    }
+
+    // Check if user is an OAuth-only user (no password set)
+    if (!user.password && (user.authProvider === 'google' || user.googleId)) {
+      console.log('Login attempt: OAuth user tried to login with password:', email);
+      return res.status(400).json({ 
+        message: 'This account was created with Google Sign-In. Please use Google Sign-In to access your account.',
+        useOAuth: true
+      });
+    }
+
+    // Check if user has a password
+    if (!user.password) {
+      console.log('Login attempt: User has no password set:', email);
       return res.status(400).json({ message: 'Invalid credentials' });
     }
 
     // Check password
-    const isMatch = await user.comparePassword(password);
-    if (!isMatch) {
-      return res.status(400).json({ message: 'Invalid credentials' });
+    try {
+      const isMatch = await user.comparePassword(password);
+      if (!isMatch) {
+        console.log('Login attempt: Invalid password for email:', email);
+        return res.status(400).json({ message: 'Invalid credentials' });
+      }
+    } catch (compareError) {
+      console.error('Error comparing password:', compareError);
+      return res.status(500).json({ message: 'Server error during authentication' });
     }
 
-    // Update last active
-    await user.updateLastActive();
+    // Update last active (non-blocking)
+    try {
+      await user.updateLastActive();
+    } catch (updateError) {
+      console.warn('Warning: Could not update last active:', updateError.message);
+      // Continue even if this fails
+    }
 
     // Generate JWT
+    if (!process.env.JWT_SECRET) {
+      console.error('JWT_SECRET is not configured');
+      return res.status(500).json({ message: 'Server configuration error' });
+    }
+
     const payload = { userId: user._id };
     const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '7d' });
+
+    console.log('Login successful for user:', user._id, user.email);
 
     res.json({
       token,
@@ -97,8 +131,13 @@ router.post('/login', [
       }
     });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Server error' });
+    console.error('❌ Login error:', error);
+    console.error('Error stack:', error.stack);
+    console.error('Request body:', { email: req.body.email });
+    res.status(500).json({ 
+      message: 'Server error',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
   }
 });
 
@@ -190,6 +229,10 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
     if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET) {
       return res.status(503).json({ message: 'Google OAuth is not configured' });
     }
+    console.log('🔵 Initiating Google OAuth');
+    console.log('Request origin:', req.get('origin'));
+    console.log('Request host:', req.get('host'));
+    console.log('Request protocol:', req.protocol);
     passport.authenticate('google', {
       scope: ['profile', 'email']
     })(req, res, next);
@@ -198,7 +241,10 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
   // Google OAuth Callback
   router.get('/google/callback', 
     (req, res, next) => {
-      console.log('Google OAuth callback received');
+      console.log('🔵 Google OAuth callback received');
+      console.log('Query params:', req.query);
+      console.log('FRONTEND_URL:', process.env.FRONTEND_URL);
+      
       passport.authenticate('google', { 
         session: false,
         failureRedirect: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/login?error=google_auth_failed`
@@ -206,45 +252,51 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
     },
     async (req, res) => {
       try {
-        console.log('Google OAuth callback handler started');
+        console.log('🟢 Google OAuth callback handler started');
         console.log('Request user:', req.user ? 'User exists' : 'No user');
         
         if (!req.user) {
-          console.error('Error: User not found in request after authentication');
+          console.error('❌ Error: User not found in request after authentication');
           const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
           return res.redirect(`${frontendUrl}/login?error=google_auth_failed`);
         }
         
         const user = req.user;
-        console.log('User ID:', user._id);
-        console.log('User email:', user.email);
+        console.log('✅ User ID:', user._id);
+        console.log('✅ User email:', user.email);
+        console.log('✅ User username:', user.username);
         
         // Generate JWT token
         if (!process.env.JWT_SECRET) {
+          console.error('❌ JWT_SECRET is not configured');
           throw new Error('JWT_SECRET is not configured');
         }
         
         const payload = { userId: user._id };
         const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '7d' });
-        console.log('JWT token generated successfully');
+        console.log('✅ JWT token generated successfully');
 
-        // Update last active
+        // Update last active (non-blocking)
         try {
           await user.updateLastActive();
         } catch (updateError) {
-          console.warn('Warning: Could not update last active:', updateError.message);
+          console.warn('⚠️ Warning: Could not update last active:', updateError.message);
           // Continue even if this fails
         }
 
         // Redirect to frontend with token
         const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
-        console.log('Redirecting to frontend:', `${frontendUrl}/auth/google/callback?token=${token.substring(0, 20)}...&success=true`);
-        res.redirect(`${frontendUrl}/auth/google/callback?token=${token}&success=true`);
+        const redirectUrl = `${frontendUrl}/auth/google/callback?token=${encodeURIComponent(token)}&success=true`;
+        console.log('🔄 Redirecting to frontend:', redirectUrl.substring(0, 100) + '...');
+        res.redirect(redirectUrl);
       } catch (error) {
         console.error('❌ Error in Google OAuth callback:', error);
+        console.error('Error name:', error.name);
+        console.error('Error message:', error.message);
         console.error('Error stack:', error.stack);
         const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
-        res.redirect(`${frontendUrl}/login?error=google_auth_failed&details=${encodeURIComponent(error.message)}`);
+        const errorMessage = encodeURIComponent(error.message || 'Authentication failed');
+        res.redirect(`${frontendUrl}/login?error=google_auth_failed&details=${errorMessage}`);
       }
     }
   );
