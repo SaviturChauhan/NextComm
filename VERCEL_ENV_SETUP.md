@@ -92,3 +92,4 @@ GEMINI_API_KEY=your_gemini_api_key
 - Never commit `.env` files with sensitive data to Git
 - Use Vercel's environment variable UI for production secrets
 
+
