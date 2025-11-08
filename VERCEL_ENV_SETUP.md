@@ -93,3 +93,4 @@ GEMINI_API_KEY=your_gemini_api_key
 - Use Vercel's environment variable UI for production secrets
 
 
+

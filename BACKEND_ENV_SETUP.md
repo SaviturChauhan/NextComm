@@ -190,3 +190,4 @@ GOOGLE_CALLBACK_URL=https://your-backend.vercel.app/api/auth/google/callback
 GEMINI_API_KEY=your-gemini-api-key
 ```
 
+
