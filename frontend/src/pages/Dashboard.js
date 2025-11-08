@@ -31,7 +31,8 @@ const Dashboard = () => {
 
   useEffect(() => {
     fetchQuestions(1);
-  }, [questionType, filters, searchQuery]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [questionType, filters, searchQuery]); // fetchQuestions is defined in component
 
   const fetchQuestions = async (page = 1) => {
     try {

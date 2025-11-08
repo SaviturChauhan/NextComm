@@ -11,8 +11,6 @@ const AvatarEditor = ({ isOpen, onClose, currentAvatar, onSave, userId, username
   // Generate personalized sample avatars with better-looking options
   const getSampleAvatars = () => {
     const encodedName = encodeURIComponent(username);
-    const seed = username || 'User';
-    const timestamp = Date.now(); // Add timestamp to ensure variety
     
     return [
       // Professional Letter Avatars (Clean and modern)
@@ -150,12 +148,12 @@ const AvatarEditor = ({ isOpen, onClose, currentAvatar, onSave, userId, username
       }
 
       // Update avatar via API
-      const response = await axios.put('/api/auth/profile', {
+      await axios.put('/api/auth/profile', {
         avatar: avatarUrl
       });
 
       if (onSave) {
-        onSave(response.data.avatar);
+        onSave(avatarUrl);
       }
       
       toast.success('Profile photo updated successfully!');
@@ -171,9 +169,10 @@ const AvatarEditor = ({ isOpen, onClose, currentAvatar, onSave, userId, username
   const handleRemove = async () => {
     try {
       setUploading(true);
-      const response = await axios.put('/api/auth/profile', {
+      await axios.put('/api/auth/profile', {
         avatar: ''
       });
+      // Response is not needed here
 
       if (onSave) {
         onSave('');

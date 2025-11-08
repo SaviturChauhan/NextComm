@@ -1,15 +1,28 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { FiX, FiZap, FiCopy, FiCheck } from 'react-icons/fi';
 import axios from 'axios';
-import ReactQuill from 'react-quill';
-import 'react-quill/dist/quill.snow.css';
-import { quillFormats } from '../../utils/quillToolbar';
 
 const AISuggestionModal = ({ isOpen, onClose, onUseSuggestion, questionTitle, questionId }) => {
   const [aiAnswer, setAiAnswer] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [copied, setCopied] = useState(false);
+
+  const fetchAISuggestion = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError('');
+      const response = await axios.post('/api/ai/generate-answer', {
+        questionId
+      });
+      setAiAnswer(response.data.answer || '');
+    } catch (error) {
+      console.error('Error fetching AI suggestion:', error);
+      setError(error.response?.data?.message || 'Failed to generate AI suggestion. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  }, [questionId]);
 
   useEffect(() => {
     if (isOpen && questionId) {
@@ -18,7 +31,7 @@ const AISuggestionModal = ({ isOpen, onClose, onUseSuggestion, questionTitle, qu
       setAiAnswer('');
       setError('');
     }
-  }, [isOpen, questionId]);
+  }, [isOpen, questionId, fetchAISuggestion]);
 
   useEffect(() => {
     if (isOpen) {
@@ -40,21 +53,6 @@ const AISuggestionModal = ({ isOpen, onClose, onUseSuggestion, questionTitle, qu
     return () => window.removeEventListener('keydown', handleEsc);
   }, [isOpen, onClose]);
 
-  const fetchAISuggestion = async () => {
-    try {
-      setLoading(true);
-      setError('');
-      const response = await axios.post('/api/ai/generate-answer', {
-        questionId
-      });
-      setAiAnswer(response.data.answer || '');
-    } catch (error) {
-      console.error('Error fetching AI suggestion:', error);
-      setError(error.response?.data?.message || 'Failed to generate AI suggestion. Please try again.');
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleCopy = () => {
     // Get plain text from Quill editor

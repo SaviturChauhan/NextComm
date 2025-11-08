@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { FiUsers, FiMessageSquare, FiCheckCircle, FiTrash2, FiEdit2, FiShield, FiX, FiCheck, FiBarChart2, FiSettings } from 'react-icons/fi';
+import { FiUsers, FiMessageSquare, FiCheckCircle, FiTrash2, FiShield, FiX, FiCheck, FiBarChart2 } from 'react-icons/fi';
+// Removed unused imports: FiEdit2, FiSettings
 import axios from 'axios';
 import toast from 'react-hot-toast';
 import ConfirmModal from '../components/common/ConfirmModal';
@@ -15,7 +16,6 @@ const AdminDashboard = () => {
   const [questionPagination, setQuestionPagination] = useState({ currentPage: 1, totalPages: 1 });
   const [answerPagination, setAnswerPagination] = useState({ currentPage: 1, totalPages: 1 });
   const [deleteModal, setDeleteModal] = useState({ show: false, type: '', id: '', title: '' });
-  const [editModal, setEditModal] = useState({ show: false, type: '', item: null });
   const [roleChangeModal, setRoleChangeModal] = useState({ show: false, user: null, newRole: '' });
 
   useEffect(() => {

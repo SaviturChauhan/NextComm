@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { FiBookmark, FiCheck } from 'react-icons/fi';
+import React, { useState, useEffect, useCallback } from 'react';
+import { FiBookmark } from 'react-icons/fi';
 import axios from 'axios';
 import toast from 'react-hot-toast';
 import { useAuth } from '../../contexts/AuthContext';
@@ -11,16 +11,8 @@ const BookmarkButton = ({ questionId, answerId, size = 'md', showText = false })
   const [loading, setLoading] = useState(false);
   const [showListModal, setShowListModal] = useState(false);
   const [lists, setLists] = useState([]);
-  const [selectedListId, setSelectedListId] = useState(null);
 
-  useEffect(() => {
-    if (isAuthenticated && (questionId || answerId)) {
-      checkBookmarkStatus();
-      fetchLists();
-    }
-  }, [isAuthenticated, questionId, answerId]);
-
-  const checkBookmarkStatus = async () => {
+  const checkBookmarkStatus = useCallback(async () => {
     try {
       const response = await axios.get('/api/bookmarks/check', {
         params: { questionId, answerId }
@@ -28,21 +20,30 @@ const BookmarkButton = ({ questionId, answerId, size = 'md', showText = false })
       setIsBookmarked(response.data.isBookmarked);
       if (response.data.bookmark) {
         setBookmarkId(response.data.bookmark._id);
-        setSelectedListId(response.data.bookmark.list?._id || null);
+      } else {
+        setBookmarkId(response.data.bookmarkId || null);
       }
     } catch (error) {
       console.error('Error checking bookmark status:', error);
     }
-  };
+  }, [questionId, answerId]);
 
-  const fetchLists = async () => {
+  const fetchLists = useCallback(async () => {
     try {
       const response = await axios.get('/api/bookmarks/lists');
       setLists(response.data.lists || []);
     } catch (error) {
       console.error('Error fetching lists:', error);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    if (isAuthenticated && (questionId || answerId)) {
+      checkBookmarkStatus();
+      fetchLists();
+    }
+  }, [isAuthenticated, questionId, answerId, checkBookmarkStatus, fetchLists]);
+
 
   const handleBookmark = async () => {
     if (!isAuthenticated) {

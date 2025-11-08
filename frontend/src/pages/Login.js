@@ -196,9 +196,9 @@ const Login = () => {
             </div>
 
             <div className="text-sm">
-              <a href="#" className="font-semibold text-primary hover:text-primary/80 transition-colors">
+              <span className="font-semibold text-primary hover:text-primary/80 transition-colors cursor-pointer">
                 Forgot your password?
-              </a>
+              </span>
             </div>
           </div>
 

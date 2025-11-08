@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
-import { FiAward, FiUsers, FiMessageSquare, FiClock } from 'react-icons/fi';
+import { FiAward, FiUsers, FiMessageSquare } from 'react-icons/fi';
+// Removed unused import: FiClock
 import axios from 'axios';
 
 const Leaderboard = () => {
@@ -15,12 +16,7 @@ const Leaderboard = () => {
     hasPrev: false
   });
 
-  useEffect(() => {
-    fetchLeaderboard();
-    fetchTopUsers();
-  }, [category]);
-
-  const fetchLeaderboard = async (page = 1) => {
+  const fetchLeaderboard = useCallback(async (page = 1) => {
     try {
       setLoading(true);
       const response = await axios.get(`/api/leaderboard/category/${category}?page=${page}&limit=20`);

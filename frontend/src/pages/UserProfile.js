@@ -6,7 +6,6 @@ import toast from 'react-hot-toast';
 import BadgeModal from '../components/common/BadgeModal';
 import AvatarEditor from '../components/common/AvatarEditor';
 import { useAuth } from '../contexts/AuthContext';
-import { renderFormulas } from '../utils/formulaHandler';
 
 const UserProfile = () => {
   const { id } = useParams();
@@ -27,12 +26,14 @@ const UserProfile = () => {
 
   useEffect(() => {
     fetchProfile();
-  }, [id]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id]); // fetchProfile is defined inside component, disabling exhaustive-deps
 
   useEffect(() => {
     if (isOwnProfile) {
       fetchBookmarks();
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOwnProfile]);
 
   const fetchProfile = async () => {

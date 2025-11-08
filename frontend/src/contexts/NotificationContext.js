@@ -123,7 +123,8 @@ export const NotificationProvider = ({ children }) => {
         setPollingInterval(null);
       }
     }
-  }, [isAuthenticated, token, fetchNotifications, fetchUnreadCount]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAuthenticated, token, fetchNotifications, fetchUnreadCount]); // pollingInterval is managed internally
 
   const value = {
     notifications,

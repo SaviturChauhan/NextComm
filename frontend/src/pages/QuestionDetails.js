@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import ReactQuill, { Quill } from 'react-quill';
+import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 import { 
   FiThumbsUp, 
@@ -14,10 +14,10 @@ import {
   FiArrowLeft,
   FiZap
 } from 'react-icons/fi';
+// ReactQuill is used in the component, keeping it
 import axios from 'axios';
 import toast from 'react-hot-toast';
 import { useAuth } from '../contexts/AuthContext';
-import { preserveFormulasOnPaste, renderFormulas } from '../utils/formulaHandler';
 import { InlineMath, BlockMath } from 'react-katex';
 import ConfirmModal from '../components/common/ConfirmModal';
 import FormulaModal from '../components/common/FormulaModal';
@@ -252,7 +252,7 @@ const QuestionDetails = () => {
 
   useEffect(() => {
     fetchQuestion();
-  }, [id]);
+  }, [id, fetchQuestion]);
 
   const fetchQuestion = async () => {
     try {
@@ -611,20 +611,25 @@ const QuestionDetails = () => {
       const inlineMatches = [];
       let inlineMatch;
       while ((inlineMatch = inlineFormulaRegex.exec(processedContent)) !== null) {
+        // Capture the match values to avoid unsafe loop reference
+        const matchIndex = inlineMatch.index;
+        const matchLength = inlineMatch[0].length;
+        const matchFormula = inlineMatch[1];
+        
         const isInsideBlock = blockMatches.some(bm => 
-          inlineMatch.index >= bm.index && inlineMatch.index < bm.index + bm.length
+          matchIndex >= bm.index && matchIndex < bm.index + bm.length
         );
         if (!isInsideBlock) {
           // Clean up the formula
-          let formula = inlineMatch[1].trim();
+          let formula = matchFormula.trim();
           formula = formula.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&');
           
           inlineMatches.push({
-            index: inlineMatch.index,
-            length: inlineMatch[0].length,
+            index: matchIndex,
+            length: matchLength,
             formula: formula,
             isBlock: false,
-            original: inlineMatch[0]
+            original: processedContent.substring(matchIndex, matchIndex + matchLength)
           });
         }
       }
