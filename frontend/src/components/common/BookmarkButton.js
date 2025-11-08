@@ -90,7 +90,6 @@ const BookmarkButton = ({ questionId, answerId, size = 'md', showText = false })
       const bookmark = response.data.bookmark || response.data;
       setIsBookmarked(true);
       setBookmarkId(bookmark._id || bookmark.id);
-      setSelectedListId(listId || null);
       setShowListModal(false);
       toast.success(response.data.message || 'Saved to bookmarks');
     } catch (error) {

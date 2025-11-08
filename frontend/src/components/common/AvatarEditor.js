@@ -11,6 +11,7 @@ const AvatarEditor = ({ isOpen, onClose, currentAvatar, onSave, userId, username
   // Generate personalized sample avatars with better-looking options
   const getSampleAvatars = () => {
     const encodedName = encodeURIComponent(username);
+    const seed = username || 'User';
     
     return [
       // Professional Letter Avatars (Clean and modern)
