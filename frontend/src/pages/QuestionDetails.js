@@ -15,7 +15,7 @@ import {
   FiZap
 } from 'react-icons/fi';
 // ReactQuill is used in the component, keeping it
-import axios from 'axios';
+import apiClient from '../utils/axiosConfig';
 import toast from 'react-hot-toast';
 import { useAuth } from '../contexts/AuthContext';
 import { InlineMath, BlockMath } from 'react-katex';
@@ -257,7 +257,7 @@ const QuestionDetails = () => {
   const fetchQuestion = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`/api/questions/${id}`);
+      const response = await apiClient.get(`/api/questions/${id}`);
       setQuestion(response.data);
     } catch (error) {
       console.error('Error fetching question:', error);
@@ -293,7 +293,7 @@ const QuestionDetails = () => {
       // If clicking the same vote type, remove the vote
       const voteType = (currentVote && currentVote.voteType === type) ? 'remove' : type;
       
-      const response = await axios.post(`/api/${targetType}/${targetId}/vote`, {
+      const response = await apiClient.post(`/api/${targetType}/${targetId}/vote`, {
         voteType: voteType
       });
 
@@ -348,7 +348,7 @@ const QuestionDetails = () => {
     try {
       setSubmittingAnswer(true);
       
-      const response = await axios.post('/api/answers', {
+      const response = await apiClient.post('/api/answers', {
         content: answerContent,
         questionId: id
       });
@@ -377,7 +377,7 @@ const QuestionDetails = () => {
     }
 
     try {
-      const response = await axios.post(`/api/answers/${answerId}/accept`);
+      const response = await apiClient.post(`/api/answers/${answerId}/accept`);
       
       // Update the question to mark the answer as accepted
       setQuestion(prev => ({
@@ -407,7 +407,7 @@ const QuestionDetails = () => {
       confirmButtonColor: 'bg-red-500 hover:bg-red-600',
       onConfirm: async () => {
         try {
-          await axios.delete(`/api/questions/${id}`);
+          await apiClient.delete(`/api/questions/${id}`);
           toast.success('Question deleted successfully (-5 points)');
           navigate('/dashboard');
         } catch (error) {
@@ -432,7 +432,7 @@ const QuestionDetails = () => {
       confirmButtonColor: 'bg-red-500 hover:bg-red-600',
       onConfirm: async () => {
         try {
-          await axios.delete(`/api/answers/${answerId}`);
+          await apiClient.delete(`/api/answers/${answerId}`);
           
           // Update the question state
           setQuestion(prev => {
@@ -476,7 +476,7 @@ const QuestionDetails = () => {
 
     try {
       setSavingAnswer(true);
-      const response = await axios.put(`/api/answers/${editingAnswerId}`, {
+      const response = await apiClient.put(`/api/answers/${editingAnswerId}`, {
         content: editAnswerContent
       });
 

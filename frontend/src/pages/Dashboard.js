@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { FiSearch, FiFilter, FiPlus, FiClock, FiMessageSquare, FiEye, FiThumbsUp } from 'react-icons/fi';
-import axios from 'axios';
+import apiClient from '../utils/axiosConfig';
 import CustomSelect from '../components/common/CustomSelect';
 
 const Dashboard = () => {
@@ -47,7 +47,7 @@ const Dashboard = () => {
         if (searchQuery) params.append('search', searchQuery);
         if (filters.category !== 'all' && filters.category !== 'All Categories') params.append('category', filters.category);
         if (filters.difficulty !== 'all' && filters.difficulty !== 'All Levels') params.append('difficulty', filters.difficulty);
-        response = await axios.get(`/api/unanswered/unanswered?${params}`);
+        response = await apiClient.get(`/api/unanswered/unanswered?${params}`);
       } else if (questionType === 'noAccepted') {
         const params = new URLSearchParams({
           page: page.toString(),
@@ -56,7 +56,7 @@ const Dashboard = () => {
         if (searchQuery) params.append('search', searchQuery);
         if (filters.category !== 'all' && filters.category !== 'All Categories') params.append('category', filters.category);
         if (filters.difficulty !== 'all' && filters.difficulty !== 'All Levels') params.append('difficulty', filters.difficulty);
-        response = await axios.get(`/api/unanswered/no-accepted-answer?${params}`);
+        response = await apiClient.get(`/api/unanswered/no-accepted-answer?${params}`);
       } else {
         const params = new URLSearchParams({
           page: page.toString(),
@@ -66,7 +66,7 @@ const Dashboard = () => {
         if (searchQuery) params.append('search', searchQuery);
         if (filters.category !== 'all') params.append('category', filters.category);
         if (filters.difficulty !== 'all') params.append('difficulty', filters.difficulty);
-        response = await axios.get(`/api/questions?${params}`);
+        response = await apiClient.get(`/api/questions?${params}`);
       }
       
       setQuestions(response.data.questions);

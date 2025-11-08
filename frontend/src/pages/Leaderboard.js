@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { FiAward, FiUsers, FiMessageSquare } from 'react-icons/fi';
 // Removed unused import: FiClock
-import axios from 'axios';
+import apiClient from '../utils/axiosConfig';
 
 const Leaderboard = () => {
   const [leaderboard, setLeaderboard] = useState([]);
@@ -19,7 +19,7 @@ const Leaderboard = () => {
   const fetchLeaderboard = useCallback(async (page = 1) => {
     try {
       setLoading(true);
-      const response = await axios.get(`/api/leaderboard/category/${category}?page=${page}&limit=20`);
+      const response = await apiClient.get(`/api/leaderboard/category/${category}?page=${page}&limit=20`);
       setLeaderboard(response.data.leaderboard);
       setPagination(response.data.pagination);
     } catch (error) {
@@ -31,7 +31,7 @@ const Leaderboard = () => {
 
   const fetchTopUsers = async () => {
     try {
-      const response = await axios.get('/api/leaderboard/top');
+      const response = await apiClient.get('/api/leaderboard/top');
       setTopUsers(response.data);
     } catch (error) {
       console.error('Error fetching top users:', error);

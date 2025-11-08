@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { FiX, FiZap, FiCopy, FiCheck } from 'react-icons/fi';
-import axios from 'axios';
+import apiClient from '../../utils/axiosConfig';
 
 const AISuggestionModal = ({ isOpen, onClose, onUseSuggestion, questionTitle, questionId }) => {
   const [aiAnswer, setAiAnswer] = useState('');
@@ -12,7 +12,7 @@ const AISuggestionModal = ({ isOpen, onClose, onUseSuggestion, questionTitle, qu
     try {
       setLoading(true);
       setError('');
-      const response = await axios.post('/api/ai/generate-answer', {
+      const response = await apiClient.post('/api/ai/generate-answer', {
         questionId
       });
       setAiAnswer(response.data.answer || '');

@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 import { FiTag, FiAlertCircle } from 'react-icons/fi';
-import axios from 'axios';
+import apiClient from '../utils/axiosConfig';
 import toast from 'react-hot-toast';
 import CustomSelect from '../components/common/CustomSelect';
 import { createQuillModules, quillFormats } from '../utils/quillToolbar';
@@ -176,7 +176,7 @@ const AskQuestion = () => {
       duplicateCheckTimeoutRef.current = setTimeout(async () => {
         try {
           setCheckingDuplicates(true);
-          const response = await axios.post('/api/ai/check-duplicates', {
+          const response = await apiClient.post('/api/ai/check-duplicates', {
             title: formData.title,
             description: formData.description || ''
           });
@@ -272,7 +272,7 @@ const AskQuestion = () => {
         difficulty: formData.difficulty
       };
 
-      const response = await axios.post('/api/questions', questionData);
+      const response = await apiClient.post('/api/questions', questionData);
       
       toast.success('Question posted successfully!');
       navigate(`/question/${response.data._id}`);

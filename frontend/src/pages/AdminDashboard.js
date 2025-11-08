@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { FiUsers, FiMessageSquare, FiCheckCircle, FiTrash2, FiShield, FiX, FiCheck, FiBarChart2 } from 'react-icons/fi';
 // Removed unused imports: FiEdit2, FiSettings
-import axios from 'axios';
+import apiClient from '../utils/axiosConfig';
 import toast from 'react-hot-toast';
 import ConfirmModal from '../components/common/ConfirmModal';
 
@@ -33,7 +33,7 @@ const AdminDashboard = () => {
   const fetchStats = async () => {
     try {
       setLoading(true);
-      const response = await axios.get('/api/admin/stats');
+      const response = await apiClient.get('/api/admin/stats');
       setStats(response.data);
     } catch (error) {
       toast.error('Failed to fetch statistics');
@@ -46,7 +46,7 @@ const AdminDashboard = () => {
   const fetchUsers = async (page = 1) => {
     try {
       setLoading(true);
-      const response = await axios.get(`/api/admin/users?page=${page}&limit=20`);
+      const response = await apiClient.get(`/api/admin/users?page=${page}&limit=20`);
       setUsers(response.data.users);
       setUserPagination(response.data.pagination);
     } catch (error) {
@@ -60,7 +60,7 @@ const AdminDashboard = () => {
   const fetchQuestions = async (page = 1) => {
     try {
       setLoading(true);
-      const response = await axios.get(`/api/admin/questions?page=${page}&limit=20`);
+      const response = await apiClient.get(`/api/admin/questions?page=${page}&limit=20`);
       setQuestions(response.data.questions);
       setQuestionPagination(response.data.pagination);
     } catch (error) {
@@ -74,7 +74,7 @@ const AdminDashboard = () => {
   const fetchAnswers = async (page = 1) => {
     try {
       setLoading(true);
-      const response = await axios.get(`/api/admin/answers?page=${page}&limit=20`);
+      const response = await apiClient.get(`/api/admin/answers?page=${page}&limit=20`);
       setAnswers(response.data.answers);
       setAnswerPagination(response.data.pagination);
     } catch (error) {
@@ -87,7 +87,7 @@ const AdminDashboard = () => {
 
   const handleDeleteUser = async () => {
     try {
-      await axios.delete(`/api/admin/users/${deleteModal.id}`);
+      await apiClient.delete(`/api/admin/users/${deleteModal.id}`);
       toast.success('User deleted successfully');
       setDeleteModal({ show: false, type: '', id: '', title: '' });
       fetchUsers(userPagination.currentPage);
@@ -99,7 +99,7 @@ const AdminDashboard = () => {
 
   const handleDeleteQuestion = async () => {
     try {
-      await axios.delete(`/api/admin/questions/${deleteModal.id}`);
+      await apiClient.delete(`/api/admin/questions/${deleteModal.id}`);
       toast.success('Question deleted successfully');
       setDeleteModal({ show: false, type: '', id: '', title: '' });
       fetchQuestions(questionPagination.currentPage);
@@ -111,7 +111,7 @@ const AdminDashboard = () => {
 
   const handleDeleteAnswer = async () => {
     try {
-      await axios.delete(`/api/admin/answers/${deleteModal.id}`);
+      await apiClient.delete(`/api/admin/answers/${deleteModal.id}`);
       toast.success('Answer deleted successfully');
       setDeleteModal({ show: false, type: '', id: '', title: '' });
       fetchAnswers(answerPagination.currentPage);
@@ -133,7 +133,7 @@ const AdminDashboard = () => {
 
   const handleRoleChange = async () => {
     try {
-      await axios.put(`/api/admin/users/${roleChangeModal.user._id}/role`, {
+      await apiClient.put(`/api/admin/users/${roleChangeModal.user._id}/role`, {
         role: roleChangeModal.newRole
       });
       toast.success(`User role changed to ${roleChangeModal.newRole}`);
@@ -146,7 +146,7 @@ const AdminDashboard = () => {
 
   const handleAcceptAnswer = async (answerId, isAccepted) => {
     try {
-      await axios.post(`/api/admin/answers/${answerId}/accept`, { isAccepted });
+      await apiClient.post(`/api/admin/answers/${answerId}/accept`, { isAccepted });
       toast.success(`Answer ${isAccepted ? 'accepted' : 'unaccepted'} successfully`);
       fetchAnswers(answerPagination.currentPage);
     } catch (error) {

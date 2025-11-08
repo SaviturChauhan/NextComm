@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { FiBookmark } from 'react-icons/fi';
-import axios from 'axios';
+import apiClient from '../../utils/axiosConfig';
 import toast from 'react-hot-toast';
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -14,7 +14,7 @@ const BookmarkButton = ({ questionId, answerId, size = 'md', showText = false })
 
   const checkBookmarkStatus = useCallback(async () => {
     try {
-      const response = await axios.get('/api/bookmarks/check', {
+      const response = await apiClient.get('/api/bookmarks/check', {
         params: { questionId, answerId }
       });
       setIsBookmarked(response.data.isBookmarked);
@@ -30,7 +30,7 @@ const BookmarkButton = ({ questionId, answerId, size = 'md', showText = false })
 
   const fetchLists = useCallback(async () => {
     try {
-      const response = await axios.get('/api/bookmarks/lists');
+      const response = await apiClient.get('/api/bookmarks/lists');
       setLists(response.data.lists || []);
     } catch (error) {
       console.error('Error fetching lists:', error);
@@ -55,7 +55,7 @@ const BookmarkButton = ({ questionId, answerId, size = 'md', showText = false })
       // Unbookmark
       try {
         setLoading(true);
-        await axios.delete(`/api/bookmarks/${bookmarkId}`);
+        await apiClient.delete(`/api/bookmarks/${bookmarkId}`);
         setIsBookmarked(false);
         setBookmarkId(null);
         toast.success('Removed from bookmarks');
@@ -86,7 +86,7 @@ const BookmarkButton = ({ questionId, answerId, size = 'md', showText = false })
       if (answerId) payload.answerId = answerId;
       if (listId) payload.listId = listId;
       
-      const response = await axios.post('/api/bookmarks', payload);
+      const response = await apiClient.post('/api/bookmarks', payload);
       const bookmark = response.data.bookmark || response.data;
       setIsBookmarked(true);
       setBookmarkId(bookmark._id || bookmark.id);

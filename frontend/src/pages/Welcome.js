@@ -11,7 +11,7 @@ import {
   FiCheckCircle
 } from 'react-icons/fi';
 import Footer from '../components/layout/Footer';
-import axios from 'axios';
+import apiClient from '../utils/axiosConfig';
 
 const Welcome = () => {
   const { isAuthenticated } = useAuth();
@@ -21,7 +21,7 @@ const Welcome = () => {
     // Fetch platform statistics
     const fetchStats = async () => {
       try {
-        const statsRes = await axios.get('/api/leaderboard/stats');
+        const statsRes = await apiClient.get('/api/leaderboard/stats');
         
         setStats({
           questions: statsRes.data.totalQuestions || 0,
@@ -34,8 +34,8 @@ const Welcome = () => {
         // Fallback to old method if stats endpoint fails
         try {
           const [questionsRes, usersRes] = await Promise.all([
-            axios.get('/api/questions?limit=1'),
-            axios.get('/api/leaderboard/top')
+            apiClient.get('/api/questions?limit=1'),
+            apiClient.get('/api/leaderboard/top')
           ]);
           
           setStats({

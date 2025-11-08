@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { FiMessageSquare, FiClock, FiThumbsUp, FiCheck, FiEdit3, FiTrash2, FiBookmark, FiSave, FiX, FiCamera } from 'react-icons/fi';
-import axios from 'axios';
+import apiClient from '../utils/axiosConfig';
 import toast from 'react-hot-toast';
 import BadgeModal from '../components/common/BadgeModal';
 import AvatarEditor from '../components/common/AvatarEditor';
@@ -39,7 +39,7 @@ const UserProfile = () => {
   const fetchProfile = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`/api/users/${id}`);
+      const response = await apiClient.get(`/api/users/${id}`);
       setProfile(response.data.user);
       setRecentQuestions(response.data.recentQuestions);
       setRecentAnswers(response.data.recentAnswers);
@@ -52,7 +52,7 @@ const UserProfile = () => {
 
   const fetchBookmarks = async () => {
     try {
-      const response = await axios.get('/api/bookmarks');
+      const response = await apiClient.get('/api/bookmarks');
       setBookmarks(response.data.bookmarks || []);
     } catch (error) {
       console.error('Error fetching bookmarks:', error);
@@ -94,7 +94,7 @@ const UserProfile = () => {
 
     try {
       setSavingUsername(true);
-      const response = await axios.put('/api/auth/profile', {
+      const response = await apiClient.put('/api/auth/profile', {
         username: editedUsername.trim()
       });
 

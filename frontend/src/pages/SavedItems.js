@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { FiBookmark, FiFolderPlus, FiEdit3, FiTrash2, FiPlus, FiX } from 'react-icons/fi';
-import axios from 'axios';
+import apiClient from '../utils/axiosConfig';
 import toast from 'react-hot-toast';
 import { useAuth } from '../contexts/AuthContext';
 import { renderFormulas } from '../utils/formulaHandler';
@@ -41,7 +41,7 @@ const SavedItems = () => {
     try {
       setLoading(true);
       const params = { type: filter !== 'all' ? filter : undefined, listId: selectedList || undefined };
-      const response = await axios.get('/api/bookmarks', { params });
+      const response = await apiClient.get('/api/bookmarks', { params });
       setBookmarks(response.data.bookmarks || []);
     } catch (error) {
       console.error('Error fetching bookmarks:', error);
@@ -53,7 +53,7 @@ const SavedItems = () => {
 
   const fetchLists = async () => {
     try {
-      const response = await axios.get('/api/bookmarks/lists');
+      const response = await apiClient.get('/api/bookmarks/lists');
       setLists(response.data.lists || []);
     } catch (error) {
       console.error('Error fetching lists:', error);
@@ -67,7 +67,7 @@ const SavedItems = () => {
     }
 
     try {
-      const response = await axios.post('/api/bookmarks/lists', {
+      const response = await apiClient.post('/api/bookmarks/lists', {
         name: newListName,
         description: newListDescription,
         color: newListColor
@@ -90,7 +90,7 @@ const SavedItems = () => {
     }
 
     try {
-      await axios.delete(`/api/bookmarks/lists/${listId}`);
+      await apiClient.delete(`/api/bookmarks/lists/${listId}`);
       setLists(lists.filter(l => l._id !== listId));
       if (selectedList === listId) {
         setSelectedList(null);
@@ -105,7 +105,7 @@ const SavedItems = () => {
 
   const handleDeleteBookmark = async (bookmarkId) => {
     try {
-      await axios.delete(`/api/bookmarks/${bookmarkId}`);
+      await apiClient.delete(`/api/bookmarks/${bookmarkId}`);
       setBookmarks(bookmarks.filter(b => b._id !== bookmarkId));
       toast.success('Bookmark removed');
     } catch (error) {

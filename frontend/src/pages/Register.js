@@ -318,9 +318,10 @@ const Register = () => {
             <button
               type="button"
               onClick={() => {
-                // Use full backend URL for OAuth
-                const backendUrl = process.env.REACT_APP_API_URL || 'http://localhost:5001';
-                window.location.href = `${backendUrl}/api/auth/google`;
+                // Use backend URL from environment or fallback to relative URL
+                const backendUrl = process.env.REACT_APP_API_URL || '';
+                const url = backendUrl ? `${backendUrl}/api/auth/google` : '/api/auth/google';
+                window.location.href = url;
               }}
               className="w-full flex items-center justify-center gap-3 py-3 px-4 border-2 border-gray-300 dark:border-gray-600 rounded-xl text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-all duration-200 shadow-sm hover:shadow-md"
             >

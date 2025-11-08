@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { FiX, FiUpload, FiImage, FiCamera } from 'react-icons/fi';
-import axios from 'axios';
+import apiClient from '../../utils/axiosConfig';
 import toast from 'react-hot-toast';
 
 const AvatarEditor = ({ isOpen, onClose, currentAvatar, onSave, userId, username = 'User' }) => {
@@ -149,7 +149,7 @@ const AvatarEditor = ({ isOpen, onClose, currentAvatar, onSave, userId, username
       }
 
       // Update avatar via API
-      await axios.put('/api/auth/profile', {
+      await apiClient.put('/api/auth/profile', {
         avatar: avatarUrl
       });
 
@@ -170,7 +170,7 @@ const AvatarEditor = ({ isOpen, onClose, currentAvatar, onSave, userId, username
   const handleRemove = async () => {
     try {
       setUploading(true);
-      await axios.put('/api/auth/profile', {
+      await apiClient.put('/api/auth/profile', {
         avatar: ''
       });
       // Response is not needed here

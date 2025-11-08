@@ -59,7 +59,7 @@ Use this checklist to ensure a smooth deployment process.
 - [ ] `MONGODB_URI` (with password and database name)
 - [ ] `JWT_SECRET` (strong random string)
 - [ ] `SESSION_SECRET` (strong random string)
-- [ ] `FRONTEND_URL` (will update after frontend deployment)
+- [ ] `FRONTEND_URL` (update with your frontend deployment URL, e.g., `https://next-comm-frontend-alpha.vercel.app`)
 - [ ] `GOOGLE_CLIENT_ID` (if using Google OAuth)
 - [ ] `GOOGLE_CLIENT_SECRET` (if using Google OAuth)
 - [ ] `GOOGLE_CALLBACK_URL` (if using Google OAuth)

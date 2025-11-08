@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { FiMessageSquare, FiClock, FiEye, FiTag, FiCheck } from 'react-icons/fi';
-import axios from 'axios';
+import apiClient from '../utils/axiosConfig';
 import CustomSelect from '../components/common/CustomSelect';
 
 const NoAcceptedAnswer = () => {
@@ -27,7 +27,7 @@ const NoAcceptedAnswer = () => {
         limit: 20,
         ...filters
       };
-      const response = await axios.get('/api/unanswered/no-accepted-answer', { params });
+      const response = await apiClient.get('/api/unanswered/no-accepted-answer', { params });
       setQuestions(response.data.questions || []);
       setTotalPages(response.data.pagination?.pages || 1);
     } catch (error) {
