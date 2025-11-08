@@ -47,6 +47,11 @@ const Leaderboard = () => {
     fetchLeaderboard(page);
   };
 
+  useEffect(() => {
+    fetchLeaderboard(1);
+    fetchTopUsers();
+  }, [fetchLeaderboard]);
+
   const getCategoryIcon = (cat) => {
     switch (cat) {
       case 'points': return <FiAward className="h-5 w-5" />;
