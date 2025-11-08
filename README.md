@@ -583,45 +583,63 @@ db.users.updateOne({ email: "admin@example.com" }, { $set: { role: "ADMIN" } });
 
 ## 🚀 Deployment
 
-### Backend Deployment (Heroku/Railway/Render)
+**📖 For detailed step-by-step deployment instructions, see [DEPLOYMENT_GUIDE.md](./DEPLOYMENT_GUIDE.md)**
 
-1. **Create a new app** on your hosting platform
-2. **Set environment variables** in the dashboard
-3. **Connect GitHub repository**
-4. **Deploy**
+**✅ Use the [DEPLOYMENT_CHECKLIST.md](./DEPLOYMENT_CHECKLIST.md) to track your deployment progress**
 
-**Required Environment Variables:**
+### Quick Deployment Overview
 
-- `PORT` (auto-set by platform)
-- `MONGODB_URI`
-- `JWT_SECRET`
+#### 1. MongoDB Atlas Setup
+- Create MongoDB Atlas account
+- Create cluster and database
+- Configure network access
+- Get connection string
+
+#### 2. Backend Deployment (Railway/Heroku/Render)
+- Deploy backend to hosting platform
+- Set environment variables
+- Get backend URL
+
+#### 3. Frontend Deployment (Netlify/Vercel)
+- Deploy frontend to hosting platform
+- Set `REACT_APP_API_URL` environment variable
+- Configure redirects for SPA routing
+
+#### 4. Configure Services
+- Update CORS settings
+- Configure Google OAuth (optional)
+- Set up Gemini API (optional)
+- Create admin user
+
+### Required Environment Variables
+
+**Backend:**
+- `MONGODB_URI` - MongoDB connection string
+- `JWT_SECRET` - JWT secret key (32+ characters)
+- `FRONTEND_URL` - Frontend URL for CORS
 - `NODE_ENV=production`
-- `FRONTEND_URL`
-- `GOOGLE_CLIENT_ID` (optional)
-- `GOOGLE_CLIENT_SECRET` (optional)
-- `GEMINI_API_KEY` (optional)
+- `GOOGLE_CLIENT_ID` (optional - for OAuth)
+- `GOOGLE_CLIENT_SECRET` (optional - for OAuth)
+- `GEMINI_API_KEY` (optional - for AI features)
 
-### Frontend Deployment (Netlify/Vercel)
+**Frontend:**
+- `REACT_APP_API_URL` - Backend API URL
 
-1. **Build the React app**:
+### Recommended Deployment Platforms
 
-   ```bash
-   cd frontend
-   npm run build
-   ```
+- **Backend**: Railway (easiest), Heroku, Render
+- **Frontend**: Netlify (easiest), Vercel
+- **Database**: MongoDB Atlas (free tier available)
 
-2. **Deploy the `build` folder** to your hosting service
+### Quick Start
 
-3. **Set environment variables**:
-   - `REACT_APP_API_URL` - Your backend API URL
+1. **Read the [DEPLOYMENT_GUIDE.md](./DEPLOYMENT_GUIDE.md)** for detailed instructions
+2. **Follow the [DEPLOYMENT_CHECKLIST.md](./DEPLOYMENT_CHECKLIST.md)** to track progress
+3. **Deploy backend first**, then frontend
+4. **Update environment variables** after deployment
+5. **Test all features** in production
 
-### MongoDB Atlas Setup
-
-1. Create a MongoDB Atlas account
-2. Create a new cluster
-3. Create a database user
-4. Whitelist IP addresses (0.0.0.0/0 for development)
-5. Get connection string and update `MONGODB_URI`
+**See [DEPLOYMENT_GUIDE.md](./DEPLOYMENT_GUIDE.md) for complete step-by-step instructions.**
 
 ## 🧪 Testing
 
