@@ -65,8 +65,29 @@ router.post('/login', [
 
     const { email, password } = req.body;
 
+    // Check database connection
+    if (mongoose.connection.readyState !== 1) {
+      console.error('❌ Database not connected. Connection state:', mongoose.connection.readyState);
+      return res.status(503).json({ 
+        message: 'Database connection unavailable. Please try again in a moment.',
+        error: 'DATABASE_NOT_CONNECTED'
+      });
+    }
+
     // Check if user exists
-    const user = await User.findOne({ email: email.toLowerCase().trim() });
+    let user;
+    try {
+      user = await User.findOne({ email: email.toLowerCase().trim() });
+    } catch (dbError) {
+      console.error('❌ Database error during user lookup:', dbError);
+      console.error('Error name:', dbError.name);
+      console.error('Error message:', dbError.message);
+      return res.status(503).json({ 
+        message: 'Database error. Please try again.',
+        error: process.env.NODE_ENV === 'development' ? dbError.message : undefined
+      });
+    }
+
     if (!user) {
       console.log('Login attempt: User not found for email:', email);
       return res.status(400).json({ message: 'Invalid credentials' });

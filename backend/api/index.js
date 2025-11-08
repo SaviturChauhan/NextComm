@@ -4,6 +4,18 @@
 // Load environment variables FIRST
 require('dotenv').config();
 
+// Validate required environment variables
+const requiredEnvVars = ['MONGODB_URI', 'JWT_SECRET'];
+const missingEnvVars = requiredEnvVars.filter(varName => !process.env[varName]);
+
+if (missingEnvVars.length > 0) {
+  console.error('❌ ERROR: Missing required environment variables:');
+  missingEnvVars.forEach(varName => {
+    console.error(`   - ${varName}`);
+  });
+  console.error('Please set these in your Vercel project settings.');
+}
+
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
@@ -120,29 +132,91 @@ app.use('/api/', limiter);
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
-// MongoDB connection
+// MongoDB connection - handle serverless environment
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/nextcomm';
 
 if (!MONGODB_URI || MONGODB_URI === 'mongodb://localhost:27017/nextcomm') {
-  console.warn('⚠️  Warning: MONGODB_URI not set or using default. Database connection may fail in production.');
+  console.error('❌ ERROR: MONGODB_URI not set! Database connection will fail.');
+  console.error('Please set MONGODB_URI environment variable in Vercel dashboard.');
 }
 
-mongoose.connect(MONGODB_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-  serverSelectionTimeoutMS: 5000, // Timeout after 5s instead of 30s
-  socketTimeoutMS: 45000, // Close sockets after 45s of inactivity
-})
-.then(() => {
-  console.log('✅ MongoDB connected successfully');
-  console.log('Database:', mongoose.connection.db.databaseName);
-})
-.catch(err => {
-  console.error('❌ MongoDB connection error:', err);
-  console.error('Error name:', err.name);
-  console.error('Error message:', err.message);
-  // Don't exit in serverless environment, just log the error
-  // The connection will be retried on next request
+// Cache the connection promise to reuse across serverless invocations
+let cachedConnection = null;
+
+async function connectDatabase() {
+  // If already connected, return existing connection
+  if (mongoose.connection.readyState === 1) {
+    console.log('✅ MongoDB already connected');
+    return mongoose.connection;
+  }
+
+  // If connection is in progress, wait for it
+  if (mongoose.connection.readyState === 2) {
+    console.log('⏳ MongoDB connection in progress, waiting...');
+    return new Promise((resolve, reject) => {
+      mongoose.connection.once('connected', () => resolve(mongoose.connection));
+      mongoose.connection.once('error', reject);
+    });
+  }
+
+  // Start new connection
+  if (!cachedConnection) {
+    console.log('🔄 Establishing MongoDB connection...');
+    console.log('MONGODB_URI:', MONGODB_URI ? MONGODB_URI.replace(/\/\/.*@/, '//***:***@') : 'NOT SET');
+    
+    cachedConnection = mongoose.connect(MONGODB_URI, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+      serverSelectionTimeoutMS: 10000, // Increased timeout for serverless
+      socketTimeoutMS: 45000,
+      maxPoolSize: 1, // Limit connections for serverless
+      minPoolSize: 1,
+    })
+    .then(() => {
+      console.log('✅ MongoDB connected successfully');
+      console.log('Database:', mongoose.connection.db?.databaseName || 'unknown');
+      console.log('Connection state:', mongoose.connection.readyState);
+      return mongoose.connection;
+    })
+    .catch(err => {
+      console.error('❌ MongoDB connection error:', err);
+      console.error('Error name:', err.name);
+      console.error('Error message:', err.message);
+      console.error('Error code:', err.code);
+      cachedConnection = null; // Reset on error so we can retry
+      throw err;
+    });
+  }
+
+  return cachedConnection;
+}
+
+// Connect to database immediately
+connectDatabase().catch(err => {
+  console.error('❌ Failed to connect to MongoDB on startup:', err.message);
+});
+
+// Middleware to ensure MongoDB connection before handling requests
+app.use(async (req, res, next) => {
+  // Skip health check and root endpoint
+  if (req.path === '/api/health' || req.path === '/') {
+    return next();
+  }
+
+  try {
+    // Ensure database is connected
+    if (mongoose.connection.readyState !== 1) {
+      console.log('⏳ Database not connected, attempting connection...');
+      await connectDatabase();
+    }
+    next();
+  } catch (error) {
+    console.error('❌ Database connection failed in middleware:', error.message);
+    return res.status(503).json({ 
+      message: 'Database connection failed',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
 });
 
 // Routes
