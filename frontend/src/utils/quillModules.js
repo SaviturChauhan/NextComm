@@ -1,21 +1,21 @@
-import Quill from 'quill';
-import katex from 'katex';
-import 'katex/dist/katex.min.css';
-import hljs from 'highlight.js';
-import 'highlight.js/styles/github-dark.css';
+import Quill from "quill";
+import katex from "katex";
+import "katex/dist/katex.min.css";
+import hljs from "highlight.js";
+import "highlight.js/styles/github-dark.css";
 
 // Custom LaTeX formula button
-const Inline = Quill.import('blots/inline');
+const Inline = Quill.import("blots/inline");
 
 class FormulaBlot extends Inline {
   static create(value) {
     const node = super.create();
-    node.setAttribute('data-formula', value);
-    node.classList.add('latex-formula');
+    node.setAttribute("data-formula", value);
+    node.classList.add("latex-formula");
     try {
       const rendered = katex.renderToString(value, {
         throwOnError: false,
-        displayMode: false
+        displayMode: false,
       });
       node.innerHTML = rendered;
     } catch (e) {
@@ -25,28 +25,28 @@ class FormulaBlot extends Inline {
   }
 
   static value(node) {
-    return node.getAttribute('data-formula') || '';
+    return node.getAttribute("data-formula") || "";
   }
 }
 
-FormulaBlot.blotName = 'formula';
-FormulaBlot.tagName = 'span';
-FormulaBlot.className = 'latex-formula';
+FormulaBlot.blotName = "formula";
+FormulaBlot.tagName = "span";
+FormulaBlot.className = "latex-formula";
 
 Quill.register(FormulaBlot);
 
 // Custom code block with syntax highlighting
-const Block = Quill.import('blots/block');
+const Block = Quill.import("blots/block");
 
 class CodeBlock extends Block {
   static create(value) {
     const node = super.create();
     const { code, language } = value || {};
-    
+
     if (language) {
-      node.setAttribute('data-language', language);
+      node.setAttribute("data-language", language);
     }
-    
+
     if (code) {
       if (language && hljs.getLanguage(language)) {
         try {
@@ -59,25 +59,25 @@ class CodeBlock extends Block {
         node.innerHTML = `<pre><code>${code}</code></pre>`;
       }
     } else {
-      node.innerHTML = '<pre><code></code></pre>';
+      node.innerHTML = "<pre><code></code></pre>";
     }
-    
+
     return node;
   }
 
   static value(node) {
-    const codeElement = node.querySelector('code');
-    const language = node.getAttribute('data-language') || '';
+    const codeElement = node.querySelector("code");
+    const language = node.getAttribute("data-language") || "";
     return {
-      code: codeElement ? codeElement.textContent : '',
-      language: language
+      code: codeElement ? codeElement.textContent : "",
+      language: language,
     };
   }
 }
 
-CodeBlock.blotName = 'codeBlock';
-CodeBlock.tagName = 'pre';
-CodeBlock.className = 'ql-code-block';
+CodeBlock.blotName = "codeBlock";
+CodeBlock.tagName = "pre";
+CodeBlock.className = "ql-code-block";
 
 Quill.register(CodeBlock);
 
@@ -85,9 +85,9 @@ Quill.register(CodeBlock);
 class FormulaHandler {
   constructor(quill) {
     this.quill = quill;
-    this.toolbar = quill.getModule('toolbar');
+    this.toolbar = quill.getModule("toolbar");
     if (this.toolbar) {
-      this.toolbar.addHandler('formula', this.showFormulaDialog.bind(this));
+      this.toolbar.addHandler("formula", this.showFormulaDialog.bind(this));
     }
   }
 
@@ -95,7 +95,7 @@ class FormulaHandler {
     const range = this.quill.getSelection(true);
     if (!range) return;
 
-    const formula = prompt('Enter LaTeX formula (without $ signs):');
+    const formula = prompt("Enter LaTeX formula (without $ signs):");
     if (formula) {
       this.insertFormula(formula.trim());
     }
@@ -105,7 +105,7 @@ class FormulaHandler {
     const range = this.quill.getSelection(true);
     if (!range) return;
 
-    this.quill.insertText(range.index, `$${formula}$`, 'formula', formula);
+    this.quill.insertText(range.index, `$${formula}$`, "formula", formula);
     this.quill.setSelection(range.index + formula.length + 2);
   }
 }
@@ -114,9 +114,9 @@ class FormulaHandler {
 class CodeSyntaxHandler {
   constructor(quill) {
     this.quill = quill;
-    this.toolbar = quill.getModule('toolbar');
+    this.toolbar = quill.getModule("toolbar");
     if (this.toolbar) {
-      this.toolbar.addHandler('code', this.showCodeDialog.bind(this));
+      this.toolbar.addHandler("code", this.showCodeDialog.bind(this));
     }
   }
 
@@ -124,9 +124,12 @@ class CodeSyntaxHandler {
     const range = this.quill.getSelection(true);
     if (!range) return;
 
-    const language = prompt('Enter programming language (e.g., python, javascript, matlab, cpp):', 'python');
+    const language = prompt(
+      "Enter programming language (e.g., python, javascript, matlab, cpp):",
+      "python"
+    );
     if (language) {
-      const code = prompt('Enter code:');
+      const code = prompt("Enter code:");
       if (code !== null) {
         this.insertCode(code, language.trim().toLowerCase());
       }
@@ -138,7 +141,7 @@ class CodeSyntaxHandler {
     if (!range) return;
 
     // Insert code block
-    this.quill.insertEmbed(range.index, 'codeBlock', { code, language });
+    this.quill.insertEmbed(range.index, "codeBlock", { code, language });
     this.quill.setSelection(range.index + 1);
   }
 }
@@ -150,16 +153,16 @@ export const getQuillModules = (options = {}) => {
   const modules = {
     toolbar: {
       container: [
-        [{ 'header': [1, 2, 3, false] }],
-        ['bold', 'italic', 'underline', 'strike'],
-        [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-        ['blockquote'],
-        ...(showCodeButton ? ['code'] : []),
-        ...(showFormulaButton ? ['formula'] : []),
-        ['link', 'image'],
-        ['clean']
+        [{ header: [1, 2, 3, false] }],
+        ["bold", "italic", "underline", "strike"],
+        [{ list: "ordered" }, { list: "bullet" }],
+        ["blockquote"],
+        ...(showCodeButton ? ["code"] : []),
+        ...(showFormulaButton ? ["formula"] : []),
+        ["link", "image"],
+        ["clean"],
       ],
-      handlers: {}
+      handlers: {},
     },
     clipboard: {
       matchVisual: false,
@@ -174,8 +177,8 @@ export const getQuillModules = (options = {}) => {
           }
         }
         return text;
-      }
-    }
+      },
+    },
   };
 
   return modules;
@@ -191,21 +194,19 @@ export const initializeQuillHandlers = (quill) => {
 
 // Formats for Quill
 export const quillFormats = [
-  'header',
-  'bold', 'italic', 'underline', 'strike',
-  'list', 'bullet',
-  'blockquote',
-  'code', 'codeBlock',
-  'formula',
-  'link', 'image'
+  "header",
+  "bold",
+  "italic",
+  "underline",
+  "strike",
+  "list",
+  "bullet",
+  "blockquote",
+  "code",
+  "codeBlock",
+  "formula",
+  "link",
+  "image",
 ];
 
 export { FormulaHandler, CodeSyntaxHandler };
-
-
-
-
-
-
-
-

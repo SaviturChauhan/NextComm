@@ -1,28 +1,35 @@
-const { GoogleGenerativeAI } = require('@google/generative-ai');
+const { GoogleGenerativeAI } = require("@google/generative-ai");
 
 // Initialize Gemini API
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
 
 /**
  * Strip HTML tags from text
  */
 const stripHtml = (html) => {
-  if (!html) return '';
-  return html.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').trim();
+  if (!html) return "";
+  return html
+    .replace(/<[^>]*>/g, "")
+    .replace(/&nbsp;/g, " ")
+    .trim();
 };
 
 /**
  * Check for duplicate questions using semantic similarity
  */
-const findDuplicateQuestions = async (questionTitle, questionDescription, existingQuestions) => {
+const findDuplicateQuestions = async (
+  questionTitle,
+  questionDescription,
+  existingQuestions
+) => {
   if (!process.env.GEMINI_API_KEY) {
-    console.warn('GEMINI_API_KEY not set, skipping duplicate detection');
+    console.warn("GEMINI_API_KEY not set, skipping duplicate detection");
     return [];
   }
 
   try {
     // Use gemini-2.5-flash (faster and cheaper) or gemini-2.5-pro
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
     // Strip HTML from descriptions for better matching
     const cleanDescription = stripHtml(questionDescription).substring(0, 500);
@@ -34,7 +41,15 @@ New Question Title: ${questionTitle}
 New Question Description: ${cleanDescription}
 
 Existing Questions:
-${existingQuestions.slice(0, 50).map((q, idx) => `${idx + 1}. Title: "${q.title}"\n   Description: "${stripHtml(q.description).substring(0, 200)}..."`).join('\n\n')}
+${existingQuestions
+  .slice(0, 50)
+  .map(
+    (q, idx) =>
+      `${idx + 1}. Title: "${q.title}"\n   Description: "${stripHtml(
+        q.description
+      ).substring(0, 200)}..."`
+  )
+  .join("\n\n")}
 
 Analyze the semantic similarity and return ONLY a JSON array of question indices (0-based) that are similar to the new question. 
 If no similar questions exist, return an empty array [].
@@ -61,14 +76,17 @@ Response:`;
         similarIndices = JSON.parse(jsonMatch[0]);
       }
     } catch (e) {
-      console.error('Error parsing duplicate detection response:', e);
+      console.error("Error parsing duplicate detection response:", e);
       return [];
     }
 
     // Return similar questions (limit to top 5)
-    return similarIndices.slice(0, 5).map(idx => existingQuestions[idx]).filter(Boolean);
+    return similarIndices
+      .slice(0, 5)
+      .map((idx) => existingQuestions[idx])
+      .filter(Boolean);
   } catch (error) {
-    console.error('Error in duplicate question detection:', error);
+    console.error("Error in duplicate question detection:", error);
     return [];
   }
 };
@@ -76,22 +94,33 @@ Response:`;
 /**
  * Generate AI-assisted answer suggestion
  */
-const generateAnswerSuggestion = async (questionTitle, questionDescription, existingAnswers = []) => {
+const generateAnswerSuggestion = async (
+  questionTitle,
+  questionDescription,
+  existingAnswers = []
+) => {
   if (!process.env.GEMINI_API_KEY) {
-    throw new Error('GEMINI_API_KEY not configured');
+    throw new Error("GEMINI_API_KEY not configured");
   }
 
   try {
     // Use gemini-2.5-flash for faster responses (or gemini-2.5-pro for more advanced)
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
     // Strip HTML from question description
     const cleanDescription = stripHtml(questionDescription);
 
     // Create context from existing answers if available
-    const context = existingAnswers.length > 0
-      ? `\n\nExisting answers for reference (please provide a different or complementary perspective):\n${existingAnswers.slice(0, 3).map((a, idx) => `${idx + 1}. ${stripHtml(a.content).substring(0, 300)}...`).join('\n\n')}`
-      : '';
+    const context =
+      existingAnswers.length > 0
+        ? `\n\nExisting answers for reference (please provide a different or complementary perspective):\n${existingAnswers
+            .slice(0, 3)
+            .map(
+              (a, idx) =>
+                `${idx + 1}. ${stripHtml(a.content).substring(0, 300)}...`
+            )
+            .join("\n\n")}`
+        : "";
 
     const prompt = `You are an expert in wireless communication, signal processing, and related technologies. Generate a helpful, accurate, and well-formatted answer for the following question.
 
@@ -117,32 +146,44 @@ Generate the answer in HTML format:`;
     let answer = response.text().trim();
 
     // Clean up the response - remove markdown code blocks if present
-    answer = answer.replace(/```html\n?/g, '').replace(/```\n?/g, '').trim();
+    answer = answer
+      .replace(/```html\n?/g, "")
+      .replace(/```\n?/g, "")
+      .trim();
 
     // If answer doesn't have HTML tags, wrap in paragraph tags
-    if (!answer.includes('<')) {
-      answer = `<p>${answer.replace(/\n\n/g, '</p><p>').replace(/\n/g, '<br>')}</p>`;
+    if (!answer.includes("<")) {
+      answer = `<p>${answer
+        .replace(/\n\n/g, "</p><p>")
+        .replace(/\n/g, "<br>")}</p>`;
     }
 
     return answer;
   } catch (error) {
-    console.error('Error generating AI answer:', error);
-    console.error('Error details:', {
+    console.error("Error generating AI answer:", error);
+    console.error("Error details:", {
       message: error.message,
       status: error.status,
       statusText: error.statusText,
-      response: error.response?.data
+      response: error.response?.data,
     });
-    
+
     // Provide more specific error messages
-    if (error.message?.includes('API key')) {
-      throw new Error('Invalid API key. Please check your GEMINI_API_KEY.');
-    } else if (error.message?.includes('quota') || error.message?.includes('rate limit')) {
-      throw new Error('API quota exceeded. Please try again later.');
-    } else if (error.message?.includes('safety')) {
-      throw new Error('Content was blocked by safety filters. Please try rephrasing the question.');
+    if (error.message?.includes("API key")) {
+      throw new Error("Invalid API key. Please check your GEMINI_API_KEY.");
+    } else if (
+      error.message?.includes("quota") ||
+      error.message?.includes("rate limit")
+    ) {
+      throw new Error("API quota exceeded. Please try again later.");
+    } else if (error.message?.includes("safety")) {
+      throw new Error(
+        "Content was blocked by safety filters. Please try rephrasing the question."
+      );
     } else {
-      throw new Error(`Failed to generate AI answer: ${error.message || 'Please try again.'}`);
+      throw new Error(
+        `Failed to generate AI answer: ${error.message || "Please try again."}`
+      );
     }
   }
 };
@@ -150,14 +191,24 @@ Generate the answer in HTML format:`;
 /**
  * Check for duplicates using simpler text matching (fallback)
  */
-const findDuplicateQuestionsFallback = async (questionTitle, existingQuestions) => {
+const findDuplicateQuestionsFallback = async (
+  questionTitle,
+  existingQuestions
+) => {
   // Simple keyword-based similarity
-  const titleWords = questionTitle.toLowerCase().split(/\s+/).filter(w => w.length > 3);
-  
-  const similar = existingQuestions.filter(q => {
-    const qWords = q.title.toLowerCase().split(/\s+/).filter(w => w.length > 3);
-    const commonWords = titleWords.filter(w => qWords.includes(w));
-    const similarity = commonWords.length / Math.max(titleWords.length, qWords.length);
+  const titleWords = questionTitle
+    .toLowerCase()
+    .split(/\s+/)
+    .filter((w) => w.length > 3);
+
+  const similar = existingQuestions.filter((q) => {
+    const qWords = q.title
+      .toLowerCase()
+      .split(/\s+/)
+      .filter((w) => w.length > 3);
+    const commonWords = titleWords.filter((w) => qWords.includes(w));
+    const similarity =
+      commonWords.length / Math.max(titleWords.length, qWords.length);
     return similarity > 0.4; // 40% word overlap
   });
 
@@ -168,6 +219,5 @@ module.exports = {
   findDuplicateQuestions,
   generateAnswerSuggestion,
   findDuplicateQuestionsFallback,
-  stripHtml
+  stripHtml,
 };
-

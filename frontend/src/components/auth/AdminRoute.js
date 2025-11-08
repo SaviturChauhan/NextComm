@@ -1,7 +1,7 @@
-import React from 'react';
-import { Navigate } from 'react-router-dom';
-import { useAuth } from '../../contexts/AuthContext';
-import toast from 'react-hot-toast';
+import React from "react";
+import { Navigate } from "react-router-dom";
+import { useAuth } from "../../contexts/AuthContext";
+import toast from "react-hot-toast";
 
 const AdminRoute = ({ children }) => {
   const { isAuthenticated, user, loading } = useAuth();
@@ -15,12 +15,12 @@ const AdminRoute = ({ children }) => {
   }
 
   if (!isAuthenticated) {
-    toast.error('Please login to access this page');
+    toast.error("Please login to access this page");
     return <Navigate to="/login" replace />;
   }
 
-  if (user?.role !== 'ADMIN') {
-    toast.error('Access denied. Admin privileges required.');
+  if (user?.role !== "ADMIN") {
+    toast.error("Access denied. Admin privileges required.");
     return <Navigate to="/dashboard" replace />;
   }
 
@@ -28,11 +28,3 @@ const AdminRoute = ({ children }) => {
 };
 
 export default AdminRoute;
-
-
-
-
-
-
-
-

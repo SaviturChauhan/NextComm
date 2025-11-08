@@ -1,61 +1,67 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
-import { 
-  FiTarget, 
-  FiUsers, 
-  FiAward, 
-  FiBook, 
-  FiCode, 
+import React from "react";
+import { Link } from "react-router-dom";
+import {
+  FiTarget,
+  FiUsers,
+  FiAward,
+  FiBook,
+  FiCode,
   FiMessageSquare,
   FiTrendingUp,
-  FiZap
-} from 'react-icons/fi';
+  FiZap,
+} from "react-icons/fi";
 
 const About = () => {
   const features = [
     {
       icon: FiMessageSquare,
-      title: 'Ask Anything',
-      description: 'Stuck on a tricky concept? Need help with a real-world implementation? Post your question and get detailed, practical answers from peers and industry experts.'
+      title: "Ask Anything",
+      description:
+        "Stuck on a tricky concept? Need help with a real-world implementation? Post your question and get detailed, practical answers from peers and industry experts.",
     },
     {
       icon: FiUsers,
-      title: 'Share Your Expertise',
-      description: 'Help others by providing clear, well-explained answers. Every great answer builds your reputation and contributes to the community\'s collective knowledge.'
+      title: "Share Your Expertise",
+      description:
+        "Help others by providing clear, well-explained answers. Every great answer builds your reputation and contributes to the community's collective knowledge.",
     },
     {
       icon: FiAward,
-      title: 'Build Your Reputation',
-      description: 'We believe in recognizing contributions. By asking insightful questions and providing valuable answers, you\'ll earn points and badges, showcasing your expertise and standing within the wireless communication field.'
+      title: "Build Your Reputation",
+      description:
+        "We believe in recognizing contributions. By asking insightful questions and providing valuable answers, you'll earn points and badges, showcasing your expertise and standing within the wireless communication field.",
     },
     {
       icon: FiBook,
-      title: 'Learn and Grow',
-      description: 'Browse topics, follow discussions, and discover new insights on our curated platform, designed to help you stay at the forefront of the industry.'
-    }
+      title: "Learn and Grow",
+      description:
+        "Browse topics, follow discussions, and discover new insights on our curated platform, designed to help you stay at the forefront of the industry.",
+    },
   ];
 
   const audience = [
     {
       icon: FiBook,
-      title: 'Students',
-      description: 'Navigating complex coursework and looking for clear explanations.'
+      title: "Students",
+      description:
+        "Navigating complex coursework and looking for clear explanations.",
     },
     {
       icon: FiCode,
-      title: 'Professional Engineers',
-      description: 'Tackling a new design challenge or seeking a fresh perspective.'
+      title: "Professional Engineers",
+      description:
+        "Tackling a new design challenge or seeking a fresh perspective.",
     },
     {
       icon: FiZap,
-      title: 'Hobbyists & Enthusiasts',
-      description: 'Passionate about the technology that connects our world.'
+      title: "Hobbyists & Enthusiasts",
+      description: "Passionate about the technology that connects our world.",
     },
     {
       icon: FiTrendingUp,
-      title: 'Academics & Researchers',
-      description: 'Looking to discuss and refine cutting-edge concepts.'
-    }
+      title: "Academics & Researchers",
+      description: "Looking to discuss and refine cutting-edge concepts.",
+    },
   ];
 
   return (
@@ -71,7 +77,8 @@ const About = () => {
               About NextComm
             </h1>
             <p className="text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
-              The premier online community and knowledge hub dedicated to the world of wireless communication
+              The premier online community and knowledge hub dedicated to the
+              world of wireless communication
             </p>
           </div>
 
@@ -82,10 +89,18 @@ const About = () => {
             </h2>
             <div className="prose dark:prose-invert max-w-none text-gray-700 dark:text-gray-300 leading-relaxed">
               <p className="text-lg mb-4">
-                Welcome to NextComm, the premier online community and knowledge hub dedicated to the world of wireless communication. Our mission is simple: to create a single, accessible platform where students, professionals, and enthusiasts can come together to ask, answer, and learn about every facet of wireless technology.
+                Welcome to NextComm, the premier online community and knowledge
+                hub dedicated to the world of wireless communication. Our
+                mission is simple: to create a single, accessible platform where
+                students, professionals, and enthusiasts can come together to
+                ask, answer, and learn about every facet of wireless technology.
               </p>
               <p className="mb-4">
-                From the fundamentals of RF and signal processing to the complexities of 5G, MIMO, OFDM, and beyond, wireless communication is a field that is both rapidly evolving and notoriously complex. We believe that learning and problem-solving should be a collaborative effort.
+                From the fundamentals of RF and signal processing to the
+                complexities of 5G, MIMO, OFDM, and beyond, wireless
+                communication is a field that is both rapidly evolving and
+                notoriously complex. We believe that learning and
+                problem-solving should be a collaborative effort.
               </p>
             </div>
           </div>
@@ -96,7 +111,8 @@ const About = () => {
               What We Do
             </h2>
             <p className="text-center text-gray-600 dark:text-gray-300 mb-8 max-w-2xl mx-auto">
-              NextComm is more than just a Q&A site; it's a community-driven ecosystem for knowledge sharing.
+              NextComm is more than just a Q&A site; it's a community-driven
+              ecosystem for knowledge sharing.
             </p>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {features.map((feature, index) => {
@@ -170,7 +186,11 @@ const About = () => {
               Join Our Community
             </h2>
             <p className="text-lg text-gray-700 dark:text-gray-300 mb-8 max-w-2xl mx-auto leading-relaxed">
-              NextComm is powered by its users. Your curiosity and willingness to share are what make this community thrive. So, whether you have a question to ask or knowledge to share, we invite you to sign up, dive in, and help us build the most comprehensive wireless communication resource on the web.
+              NextComm is powered by its users. Your curiosity and willingness
+              to share are what make this community thrive. So, whether you have
+              a question to ask or knowledge to share, we invite you to sign up,
+              dive in, and help us build the most comprehensive wireless
+              communication resource on the web.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link
@@ -193,7 +213,21 @@ const About = () => {
           {/* Additional Info */}
           <div className="mt-12 text-center">
             <p className="text-gray-500 dark:text-gray-400 text-sm">
-              Ready to get started? <Link to="/register" className="text-primary hover:underline font-medium">Sign up</Link> or <Link to="/login" className="text-primary hover:underline font-medium">log in</Link> to join the conversation.
+              Ready to get started?{" "}
+              <Link
+                to="/register"
+                className="text-primary hover:underline font-medium"
+              >
+                Sign up
+              </Link>{" "}
+              or{" "}
+              <Link
+                to="/login"
+                className="text-primary hover:underline font-medium"
+              >
+                log in
+              </Link>{" "}
+              to join the conversation.
             </p>
           </div>
         </div>
@@ -203,4 +237,3 @@ const About = () => {
 };
 
 export default About;
-

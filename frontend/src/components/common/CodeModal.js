@@ -1,49 +1,55 @@
-import React, { useState, useEffect } from 'react';
-import { FiX, FiCode, FiCopy } from 'react-icons/fi';
+import React, { useState, useEffect } from "react";
+import { FiX, FiCode, FiCopy } from "react-icons/fi";
 
 const LANGUAGES = [
-  { value: 'python', label: 'Python' },
-  { value: 'javascript', label: 'JavaScript' },
-  { value: 'matlab', label: 'MATLAB' },
-  { value: 'cpp', label: 'C++' },
-  { value: 'c', label: 'C' },
-  { value: 'java', label: 'Java' },
-  { value: 'html', label: 'HTML' },
-  { value: 'css', label: 'CSS' },
-  { value: 'bash', label: 'Bash/Shell' },
-  { value: 'sql', label: 'SQL' },
-  { value: 'json', label: 'JSON' },
-  { value: 'xml', label: 'XML' },
-  { value: 'plaintext', label: 'Plain Text' }
+  { value: "python", label: "Python" },
+  { value: "javascript", label: "JavaScript" },
+  { value: "matlab", label: "MATLAB" },
+  { value: "cpp", label: "C++" },
+  { value: "c", label: "C" },
+  { value: "java", label: "Java" },
+  { value: "html", label: "HTML" },
+  { value: "css", label: "CSS" },
+  { value: "bash", label: "Bash/Shell" },
+  { value: "sql", label: "SQL" },
+  { value: "json", label: "JSON" },
+  { value: "xml", label: "XML" },
+  { value: "plaintext", label: "Plain Text" },
 ];
 
-const CodeModal = ({ isOpen, onClose, onConfirm, initialCode = '', initialLanguage = 'python' }) => {
+const CodeModal = ({
+  isOpen,
+  onClose,
+  onConfirm,
+  initialCode = "",
+  initialLanguage = "python",
+}) => {
   const [code, setCode] = useState(initialCode);
   const [language, setLanguage] = useState(initialLanguage);
 
   // Prevent body scroll when modal is open
   useEffect(() => {
     if (isOpen) {
-      document.body.style.overflow = 'hidden';
+      document.body.style.overflow = "hidden";
       setCode(initialCode);
       setLanguage(initialLanguage);
     } else {
-      document.body.style.overflow = 'unset';
+      document.body.style.overflow = "unset";
     }
     return () => {
-      document.body.style.overflow = 'unset';
+      document.body.style.overflow = "unset";
     };
   }, [isOpen, initialCode, initialLanguage]);
 
   // Handle ESC key
   useEffect(() => {
     const handleEsc = (e) => {
-      if (e.key === 'Escape' && isOpen) {
+      if (e.key === "Escape" && isOpen) {
         onClose();
       }
     };
-    document.addEventListener('keydown', handleEsc);
-    return () => document.removeEventListener('keydown', handleEsc);
+    document.addEventListener("keydown", handleEsc);
+    return () => document.removeEventListener("keydown", handleEsc);
   }, [isOpen, onClose]);
 
   const handleSubmit = (e) => {
@@ -52,16 +58,16 @@ const CodeModal = ({ isOpen, onClose, onConfirm, initialCode = '', initialLangua
       return;
     }
     onConfirm(code.trim(), language);
-    setCode('');
-    setLanguage('python');
+    setCode("");
+    setLanguage("python");
     onClose();
   };
 
   const handleKeyDown = (e) => {
-    if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+    if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
       handleSubmit(e);
     }
-    if (e.key === 'Escape') {
+    if (e.key === "Escape") {
       onClose();
     }
   };
@@ -75,7 +81,7 @@ const CodeModal = ({ isOpen, onClose, onConfirm, initialCode = '', initialLangua
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       {/* Backdrop */}
-      <div 
+      <div
         className="absolute inset-0 bg-black/50 dark:bg-black/70 backdrop-blur-sm animate-fade-in"
         onClick={onClose}
       ></div>
@@ -107,11 +113,17 @@ const CodeModal = ({ isOpen, onClose, onConfirm, initialCode = '', initialLangua
         </div>
 
         {/* Body */}
-        <form onSubmit={handleSubmit} className="flex-1 flex flex-col overflow-hidden p-6">
+        <form
+          onSubmit={handleSubmit}
+          className="flex-1 flex flex-col overflow-hidden p-6"
+        >
           <div className="space-y-4 flex-1 flex flex-col">
             {/* Language Selection */}
             <div>
-              <label htmlFor="language" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label
+                htmlFor="language"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+              >
                 Programming Language
               </label>
               <select
@@ -131,7 +143,10 @@ const CodeModal = ({ isOpen, onClose, onConfirm, initialCode = '', initialLangua
             {/* Code Input */}
             <div className="flex-1 flex flex-col">
               <div className="flex items-center justify-between mb-2">
-                <label htmlFor="code" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                <label
+                  htmlFor="code"
+                  className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                >
                   Code
                 </label>
                 {code && (
@@ -186,4 +201,3 @@ const CodeModal = ({ isOpen, onClose, onConfirm, initialCode = '', initialLangua
 };
 
 export default CodeModal;
-

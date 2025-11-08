@@ -1,6 +1,6 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
-import { FiAlertCircle, FiX, FiExternalLink } from 'react-icons/fi';
+import React from "react";
+import { Link } from "react-router-dom";
+import { FiAlertCircle, FiX, FiExternalLink } from "react-icons/fi";
 
 const DuplicateQuestionAlert = ({ duplicates, onDismiss, onViewDuplicate }) => {
   if (!duplicates || duplicates.length === 0) return null;
@@ -16,7 +16,9 @@ const DuplicateQuestionAlert = ({ duplicates, onDismiss, onViewDuplicate }) => {
             Similar questions found
           </h3>
           <p className="text-sm text-yellow-700 dark:text-yellow-300 mb-3">
-            We found {duplicates.length} similar question{duplicates.length > 1 ? 's' : ''} that might have the answer you're looking for:
+            We found {duplicates.length} similar question
+            {duplicates.length > 1 ? "s" : ""} that might have the answer you're
+            looking for:
           </p>
           <div className="space-y-2 mb-3">
             {duplicates.slice(0, 3).map((question) => (
@@ -41,7 +43,8 @@ const DuplicateQuestionAlert = ({ duplicates, onDismiss, onViewDuplicate }) => {
             ))}
           </div>
           <p className="text-xs text-yellow-600 dark:text-yellow-400">
-            Please check if your question has already been answered. If not, you can still post your question.
+            Please check if your question has already been answered. If not, you
+            can still post your question.
           </p>
         </div>
         {onDismiss && (
@@ -59,11 +62,3 @@ const DuplicateQuestionAlert = ({ duplicates, onDismiss, onViewDuplicate }) => {
 };
 
 export default DuplicateQuestionAlert;
-
-
-
-
-
-
-
-

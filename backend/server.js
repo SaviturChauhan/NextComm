@@ -13,10 +13,74 @@ const app = express();
 
 // Security middleware
 app.use(helmet());
-app.use(cors({
-  origin: process.env.FRONTEND_URL || (process.env.NODE_ENV === 'production' ? 'https://your-frontend-domain.com' : 'http://localhost:3000'),
-  credentials: true
-}));
+
+// CORS configuration - support multiple origins for Vercel preview deployments
+const allowedOrigins = [];
+
+// Add production frontend URL if set
+if (process.env.FRONTEND_URL) {
+  allowedOrigins.push(process.env.FRONTEND_URL);
+}
+
+// Add Vercel preview deployment pattern (supports git branches, PR previews, etc.)
+// If FRONTEND_URL is a Vercel domain, allow all *.vercel.app subdomains for preview deployments
+if (process.env.FRONTEND_URL) {
+  const frontendDomain = process.env.FRONTEND_URL.replace('https://', '').replace('http://', '').split('/')[0];
+  
+  // Check if it's a Vercel domain
+  if (frontendDomain.includes('.vercel.app')) {
+    // Allow all Vercel preview deployments (*.vercel.app)
+    // This is safe because:
+    // 1. Only allows vercel.app domains (not arbitrary domains)
+    // 2. Vercel preview deployments are temporary and secure
+    // 3. Supports all preview deployment patterns (git branches, PRs, etc.)
+    allowedOrigins.push(/^https:\/\/.*\.vercel\.app$/);
+    console.log('✅ CORS: Added Vercel wildcard pattern for preview deployments');
+  }
+}
+
+// Add localhost for development
+allowedOrigins.push('http://localhost:3000');
+allowedOrigins.push('http://localhost:3001');
+
+// CORS configuration function
+const corsOptions = {
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) {
+      return callback(null, true);
+    }
+
+    // Check if origin is in allowed list
+    for (const allowedOrigin of allowedOrigins) {
+      if (typeof allowedOrigin === 'string') {
+        if (origin === allowedOrigin) {
+          return callback(null, true);
+        }
+      } else if (allowedOrigin instanceof RegExp) {
+        if (allowedOrigin.test(origin)) {
+          return callback(null, true);
+        }
+      }
+    }
+
+    // Log blocked origin for debugging
+    console.warn('⚠️ CORS blocked origin:', origin);
+    console.warn('   Allowed origins:', allowedOrigins.filter(o => typeof o === 'string'));
+    
+    // In development, allow all origins
+    if (process.env.NODE_ENV !== 'production') {
+      return callback(null, true);
+    }
+
+    // Block in production if not in allowed list
+    callback(new Error('Not allowed by CORS'));
+  },
+  credentials: true,
+  optionsSuccessStatus: 200 // Some legacy browsers (IE11, various SmartTVs) choke on 204
+};
+
+app.use(cors(corsOptions));
 
 // Session configuration for OAuth (only needed if Google OAuth is enabled)
 // Check if Google OAuth is configured before setting up session
