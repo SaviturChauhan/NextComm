@@ -212,16 +212,33 @@ async function connectDatabase() {
         console.error('Error code:', err.code);
         
         // Provide helpful error messages
-        if (err.message.includes('authentication failed')) {
+        if (err.message.includes('authentication failed') || err.message.includes('bad auth')) {
           console.error('💡 Tip: Check your MongoDB username and password in the connection string');
+          console.error('💡 Tip: Verify database user exists and is active in MongoDB Atlas');
+          console.error('💡 Tip: Try creating a new database user with a simple password');
         } else if (err.message.includes('ENOTFOUND') || err.message.includes('getaddrinfo')) {
-          console.error('💡 Tip: Check your MongoDB cluster URL/hostname');
+          console.error('💡 Tip: Check your MongoDB cluster URL/hostname in connection string');
           console.error('💡 Tip: Verify MongoDB Atlas network access allows all IPs (0.0.0.0/0)');
-        } else if (err.message.includes('timeout') || err.code === 'ETIMEDOUT') {
-          console.error('💡 Tip: Connection timeout - check MongoDB Atlas network access');
-          console.error('💡 Tip: Verify your MongoDB cluster is running');
+          console.error('💡 Tip: Check if cluster is running (not paused) in MongoDB Atlas');
+        } else if (err.message.includes('timeout') || err.code === 'ETIMEDOUT' || err.name === 'MongooseServerSelectionError') {
+          console.error('💡 Tip: Connection timeout - check MongoDB Atlas Network Access');
+          console.error('💡 Tip: Make sure 0.0.0.0/0 is allowed in Network Access settings');
+          console.error('💡 Tip: Verify your MongoDB cluster is running (not paused)');
+          console.error('💡 Tip: Wait 1-2 minutes after changing Network Access settings');
+        } else if (err.message.includes('SSL') || err.message.includes('TLS') || err.message.includes('ssl3_')) {
+          console.error('💡 Tip: SSL/TLS error - check connection string uses mongodb+srv://');
+          console.error('💡 Tip: Verify MongoDB Atlas Network Access allows all IPs (0.0.0.0/0)');
+          console.error('💡 Tip: Check if cluster is running and accessible');
+          console.error('💡 Tip: Try getting a fresh connection string from MongoDB Atlas');
         } else if (err.code === 'MongoServerError') {
           console.error('💡 Tip: MongoDB server error - check cluster status in MongoDB Atlas');
+          console.error('💡 Tip: Verify cluster is running and not paused');
+        } else if (err.message.includes('Could not connect to any')) {
+          console.error('💡 Tip: Cannot connect to any MongoDB servers');
+          console.error('💡 Tip: Check MongoDB Atlas Network Access - must allow 0.0.0.0/0');
+          console.error('💡 Tip: Verify cluster is running (not paused)');
+          console.error('💡 Tip: Check connection string format is correct');
+          console.error('💡 Tip: Verify database user exists and credentials are correct');
         }
         
         cachedConnection = null; // Reset on error so we can retry
