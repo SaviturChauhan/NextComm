@@ -403,7 +403,13 @@ const QuestionDetails = () => {
           navigate('/dashboard');
         } catch (error) {
           console.error('Error deleting question:', error);
-          toast.error('Failed to delete question');
+          const errorMessage = error.response?.data?.message || error.message || 'Failed to delete question';
+          toast.error(errorMessage);
+          
+          // If 403, show more specific message
+          if (error.response?.status === 403) {
+            toast.error('You are not authorized to delete this question');
+          }
         }
       }
     });
@@ -806,7 +812,12 @@ const QuestionDetails = () => {
                 {/* Voting */}
                 <div className="flex items-center gap-4">
                   {(() => {
-                    const userVote = question.votes?.voters?.find(v => v.user === user?.id);
+                    // Find user's vote - handle both ObjectId and populated user object
+                    const userVote = question.votes?.voters?.find(v => {
+                      const voteUserId = v.user?._id || v.user;
+                      const currentUserId = user?.id || user?._id;
+                      return String(voteUserId) === String(currentUserId);
+                    });
                     const hasUpvoted = userVote?.voteType === 'upvote';
                     const hasDownvoted = userVote?.voteType === 'downvote';
                     
@@ -936,7 +947,12 @@ const QuestionDetails = () => {
                           <div className="flex items-center justify-between mt-4">
                         <div className="flex items-center gap-4">
                           {(() => {
-                            const userVote = answer.votes?.voters?.find(v => v.user === user?.id);
+                            // Find user's vote - handle both ObjectId and populated user object
+                            const userVote = answer.votes?.voters?.find(v => {
+                              const voteUserId = v.user?._id || v.user;
+                              const currentUserId = user?.id || user?._id;
+                              return String(voteUserId) === String(currentUserId);
+                            });
                             const hasUpvoted = userVote?.voteType === 'upvote';
                             const hasDownvoted = userVote?.voteType === 'downvote';
                             

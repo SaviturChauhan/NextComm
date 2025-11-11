@@ -253,7 +253,18 @@ router.delete('/:id', auth, async (req, res) => {
       return res.status(404).json({ message: 'Question not found' });
     }
 
-    if (question.author.toString() !== req.userId) {
+    // Compare author IDs properly (handle both ObjectId, string, and populated author object)
+    const questionAuthorId = question.author?._id 
+      ? String(question.author._id) 
+      : String(question.author);
+    const userId = String(req.userId);
+    
+    if (questionAuthorId !== userId) {
+      console.error('Authorization failed:', {
+        questionAuthorId,
+        userId,
+        questionAuthor: question.author
+      });
       return res.status(403).json({ message: 'Not authorized to delete this question' });
     }
 

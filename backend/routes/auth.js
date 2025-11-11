@@ -43,7 +43,12 @@ router.post('/register', [
     user = new User({ username, email, password });
     await user.save();
 
-    // Generate JWT
+    // Generate JWT - check JWT_SECRET first
+    if (!process.env.JWT_SECRET) {
+      console.error('❌ JWT_SECRET is not set! Cannot generate token.');
+      return res.status(500).json({ message: 'Server configuration error: JWT_SECRET not set' });
+    }
+    
     const payload = { userId: user._id };
     const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '7d' });
 
@@ -116,7 +121,12 @@ router.post('/login', [
     // Update last active
     await user.updateLastActive();
 
-    // Generate JWT
+    // Generate JWT - check JWT_SECRET first
+    if (!process.env.JWT_SECRET) {
+      console.error('❌ JWT_SECRET is not set! Cannot generate token.');
+      return res.status(500).json({ message: 'Server configuration error: JWT_SECRET not set' });
+    }
+    
     const payload = { userId: user._id };
     const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '7d' });
 
