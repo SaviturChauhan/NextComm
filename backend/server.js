@@ -13,8 +13,19 @@ const app = express();
 
 // Security middleware
 app.use(helmet());
+
+// CORS configuration - always use FRONTEND_URL from environment if available
+// In production, FRONTEND_URL should always be set
+const corsOrigin = process.env.FRONTEND_URL || (process.env.NODE_ENV === 'production' 
+  ? 'https://next-comm-omega.vercel.app' 
+  : 'http://localhost:3000');
+
+if (process.env.NODE_ENV === 'production' && !process.env.FRONTEND_URL) {
+  console.warn('⚠️  WARNING: FRONTEND_URL is not set in production environment');
+}
+
 app.use(cors({
-  origin: process.env.NODE_ENV === 'production' ? 'https://next-comm-omega.vercel.app/' : 'http://localhost:3000',
+  origin: corsOrigin,
   credentials: true
 }));
 
@@ -104,6 +115,7 @@ if (process.env.VERCEL !== '1') {
   app.listen(PORT, () => {
     console.log(`🚀 Server running on port ${PORT}`);
     console.log(`📝 Environment: ${process.env.NODE_ENV || 'development'}`);
+    console.log(`🌐 Frontend URL: ${corsOrigin}`);
     
     // Check for required environment variables
     if (!process.env.JWT_SECRET) {
@@ -112,6 +124,10 @@ if (process.env.VERCEL !== '1') {
     
     if (!process.env.MONGODB_URI) {
       console.warn('⚠️  WARNING: MONGODB_URI is not set in .env file');
+    }
+    
+    if (!process.env.FRONTEND_URL && process.env.NODE_ENV === 'production') {
+      console.warn('⚠️  WARNING: FRONTEND_URL is not set in production environment');
     }
     
     // Google OAuth status

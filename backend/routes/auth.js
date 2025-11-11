@@ -7,6 +7,18 @@ const auth = require('../middleware/auth');
 
 const router = express.Router();
 
+// Frontend URL configuration - always use FRONTEND_URL from environment if available
+// In production, FRONTEND_URL should always be set
+const getFrontendUrl = () => {
+  const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+  
+  if (process.env.NODE_ENV === 'production' && !process.env.FRONTEND_URL) {
+    console.warn('⚠️  WARNING: FRONTEND_URL is not set in production environment');
+  }
+  
+  return frontendUrl;
+};
+
 // Register
 router.post('/register', [
   body('username').isLength({ min: 3 }).withMessage('Username must be at least 3 characters'),
@@ -199,9 +211,10 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
   router.get('/google/callback', 
     (req, res, next) => {
       console.log('Google OAuth callback received');
+      const frontendUrl = getFrontendUrl();
       passport.authenticate('google', { 
         session: false,
-        failureRedirect: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/login?error=google_auth_failed`
+        failureRedirect: `${frontendUrl}/login?error=google_auth_failed`
       })(req, res, next);
     },
     async (req, res) => {
@@ -209,9 +222,10 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
         console.log('Google OAuth callback handler started');
         console.log('Request user:', req.user ? 'User exists' : 'No user');
         
+        const frontendUrl = getFrontendUrl();
+        
         if (!req.user) {
           console.error('Error: User not found in request after authentication');
-          const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
           return res.redirect(`${frontendUrl}/login?error=google_auth_failed`);
         }
         
@@ -237,13 +251,12 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
         }
 
         // Redirect to frontend with token
-        const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
         console.log('Redirecting to frontend:', `${frontendUrl}/auth/google/callback?token=${token.substring(0, 20)}...&success=true`);
         res.redirect(`${frontendUrl}/auth/google/callback?token=${token}&success=true`);
       } catch (error) {
         console.error('❌ Error in Google OAuth callback:', error);
         console.error('Error stack:', error.stack);
-        const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+        const frontendUrl = getFrontendUrl();
         res.redirect(`${frontendUrl}/login?error=google_auth_failed&details=${encodeURIComponent(error.message)}`);
       }
     }
