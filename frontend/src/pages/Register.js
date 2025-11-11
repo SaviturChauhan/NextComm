@@ -319,7 +319,23 @@ const Register = () => {
               type="button"
               onClick={() => {
                 // Use full backend URL for OAuth
-                const backendUrl = process.env.REACT_APP_API_URL || 'http://localhost:5001';
+                // CRITICAL: In production, REACT_APP_API_URL MUST be set in Vercel environment variables
+                let backendUrl = process.env.REACT_APP_API_URL;
+                
+                if (!backendUrl) {
+                  if (process.env.NODE_ENV === 'production') {
+                    // In production, this is a critical error
+                    alert('Error: REACT_APP_API_URL is not configured. Please set it in Vercel environment variables.');
+                    console.error('❌ REACT_APP_API_URL is not set in production!');
+                    return;
+                  }
+                  // Development fallback
+                  backendUrl = 'http://localhost:5001';
+                }
+                
+                // Remove trailing slash if present
+                backendUrl = backendUrl.replace(/\/$/, '');
+                
                 window.location.href = `${backendUrl}/api/auth/google`;
               }}
               className="w-full flex items-center justify-center gap-3 py-3 px-4 border-2 border-gray-300 dark:border-gray-600 rounded-xl text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-all duration-200 shadow-sm hover:shadow-md"

@@ -130,9 +130,17 @@ if (process.env.VERCEL !== '1') {
       console.warn('⚠️  WARNING: FRONTEND_URL is not set in production environment');
     }
     
+    if (!process.env.BACKEND_URL && process.env.NODE_ENV === 'production') {
+      console.warn('⚠️  WARNING: BACKEND_URL is not set in production environment');
+      console.warn('   This is required for Google OAuth callback URL');
+    } else if (process.env.BACKEND_URL) {
+      console.log(`🔗 Backend URL: ${process.env.BACKEND_URL}`);
+    }
+    
     // Google OAuth status
     if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
       console.log('✅ Google OAuth is configured');
+      // The callback URL is logged in passport.js when it initializes
     } else {
       console.log('ℹ️  Google OAuth is not configured (optional)');
       console.log('   To enable Google Sign-In, add GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET to .env');
