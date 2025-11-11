@@ -95,26 +95,32 @@ app.use('*', (req, res) => {
   res.status(404).json({ message: 'Route not found' });
 });
 
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
-  console.log(`📝 Environment: ${process.env.NODE_ENV || 'development'}`);
-  
-  // Check for required environment variables
-  if (!process.env.JWT_SECRET) {
-    console.warn('⚠️  WARNING: JWT_SECRET is not set in .env file');
-  }
-  
-  if (!process.env.MONGODB_URI) {
-    console.warn('⚠️  WARNING: MONGODB_URI is not set in .env file');
-  }
-  
-  // Google OAuth status
-  if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
-    console.log('✅ Google OAuth is configured');
-  } else {
-    console.log('ℹ️  Google OAuth is not configured (optional)');
-    console.log('   To enable Google Sign-In, add GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET to .env');
-  }
-});
+// Export app for Vercel serverless
+module.exports = app;
+
+// Start server only if not in Vercel environment
+if (process.env.VERCEL !== '1') {
+  const PORT = process.env.PORT || 5000;
+  app.listen(PORT, () => {
+    console.log(`🚀 Server running on port ${PORT}`);
+    console.log(`📝 Environment: ${process.env.NODE_ENV || 'development'}`);
+    
+    // Check for required environment variables
+    if (!process.env.JWT_SECRET) {
+      console.warn('⚠️  WARNING: JWT_SECRET is not set in .env file');
+    }
+    
+    if (!process.env.MONGODB_URI) {
+      console.warn('⚠️  WARNING: MONGODB_URI is not set in .env file');
+    }
+    
+    // Google OAuth status
+    if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
+      console.log('✅ Google OAuth is configured');
+    } else {
+      console.log('ℹ️  Google OAuth is not configured (optional)');
+      console.log('   To enable Google Sign-In, add GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET to .env');
+    }
+  });
+}
 
