@@ -1,44 +1,48 @@
 // API configuration utility
-// Gets the backend API URL from environment or uses current origin in production
+// Gets the backend API URL from environment and configures axios
+
+import axios from 'axios';
 
 const getBackendUrl = () => {
-  // In production, use REACT_APP_API_URL if set
+  // In production, REACT_APP_API_URL MUST be set
   if (process.env.REACT_APP_API_URL) {
     return process.env.REACT_APP_API_URL.replace(/\/$/, ''); // Remove trailing slash
   }
   
-  // In development, use localhost
+  // In development, use localhost (proxy will handle it)
   if (process.env.NODE_ENV === 'development') {
-    return 'http://localhost:5001';
+    return ''; // Empty string means use relative URLs (proxy will handle it)
   }
   
-  // In production without REACT_APP_API_URL, try to infer from current origin
-  // This is a fallback - REACT_APP_API_URL should always be set in production
-  if (typeof window !== 'undefined') {
-    const origin = window.location.origin;
-    // If frontend is on Vercel, try to construct backend URL
-    // This is a fallback - you should set REACT_APP_API_URL explicitly
-    console.warn('⚠️ REACT_APP_API_URL not set. Using fallback URL detection.');
-    return origin.replace(/^https?:\/\/([^.]+)/, (match, subdomain) => {
-      // Try to construct backend URL (this is a guess - set REACT_APP_API_URL explicitly)
-      return origin; // For now, return same origin (won't work for separate deployments)
-    });
+  // In production without REACT_APP_API_URL, this is an error
+  if (process.env.NODE_ENV === 'production') {
+    console.error('❌ CRITICAL: REACT_APP_API_URL is not set in production!');
+    console.error('   Please set REACT_APP_API_URL in Vercel environment variables');
+    // Return empty string to avoid breaking, but it won't work
+    return '';
   }
   
-  // Final fallback
-  return 'http://localhost:5001';
+  // Final fallback for development
+  return '';
 };
 
 export const API_BASE_URL = getBackendUrl();
 
-// Configure axios base URL for production
-if (typeof window !== 'undefined' && process.env.NODE_ENV === 'production') {
-  // Only set baseURL if REACT_APP_API_URL is explicitly set
-  if (process.env.REACT_APP_API_URL) {
-    const axios = require('axios').default;
-    axios.defaults.baseURL = API_BASE_URL;
-  }
+// Configure axios baseURL
+// In development: empty string (uses proxy from package.json)
+// In production: full backend URL from REACT_APP_API_URL
+if (API_BASE_URL) {
+  axios.defaults.baseURL = API_BASE_URL;
+  console.log('🔗 Axios baseURL configured:', API_BASE_URL);
+} else if (process.env.NODE_ENV === 'development') {
+  // In development, proxy handles it, so baseURL stays empty
+  console.log('🔗 Axios using proxy (development mode)');
+} else {
+  // Production without REACT_APP_API_URL - this will cause 405 errors
+  console.error('❌ CRITICAL ERROR: Axios baseURL not configured in production!');
+  console.error('   All API calls will fail. Set REACT_APP_API_URL in Vercel environment variables.');
+  console.error('   Expected: REACT_APP_API_URL=https://next-comm-backend.vercel.app');
 }
 
-export default API_BASE_URL;
+export default axios;
 
