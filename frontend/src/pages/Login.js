@@ -64,7 +64,9 @@ const Login = () => {
       return;
     }
 
-    const result = await login(formData.email, formData.password);
+    // Trim email before sending to backend
+    const trimmedEmail = formData.email.trim();
+    const result = await login(trimmedEmail, formData.password);
     if (result.success) {
       navigate(from, { replace: true });
     }

@@ -96,15 +96,20 @@ export const AuthProvider = ({ children }) => {
       toast.success('Login successful!');
       return { success: true };
     } catch (error) {
+      console.error('Login error:', error);
+      console.error('Error response:', error.response?.data);
+      
       // Handle validation errors from express-validator
       if (error.response?.data?.errors && Array.isArray(error.response.data.errors)) {
         const validationMessage = error.response.data.errors[0]?.msg || 'Validation failed';
+        console.error('Validation error:', validationMessage);
         toast.error(validationMessage);
         return { success: false, error: validationMessage };
       }
       
       // Handle regular error messages
-      const message = error.response?.data?.message || 'Login failed';
+      const message = error.response?.data?.message || error.message || 'Login failed';
+      console.error('Error message:', message);
       toast.error(message);
       return { success: false, error: message };
     } finally {

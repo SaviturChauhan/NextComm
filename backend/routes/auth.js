@@ -93,19 +93,30 @@ router.post('/register', [
 
 // Login
 router.post('/login', [
-  body('email').isEmail().withMessage('Please provide a valid email'),
-  body('password').exists().withMessage('Password is required')
+  body('email')
+    .trim()
+    .notEmpty().withMessage('Email is required')
+    .normalizeEmail()
+    .isEmail().withMessage('Please provide a valid email'),
+  body('password')
+    .notEmpty().withMessage('Password is required')
 ], async (req, res) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
+      console.log('Validation errors:', errors.array());
+      console.log('Request body:', req.body);
       return res.status(400).json({ 
         message: errors.array()[0]?.msg || 'Validation failed',
         errors: errors.array() 
       });
     }
 
-    const { email, password } = req.body;
+    let { email, password } = req.body;
+    
+    // Normalize email (trim whitespace and convert to lowercase)
+    // express-validator's normalizeEmail() validates but may not modify req.body
+    email = email.trim().toLowerCase();
 
     // Check if user exists
     const user = await User.findOne({ email });
