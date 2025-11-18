@@ -71,18 +71,18 @@ const QuestionDetails = () => {
   }, []);
 
   // Handle formula button click in edit mode
-  const handleEditFormulaClick = (quill, range) => {
+  const handleEditFormulaClick = React.useCallback((quill, range) => {
     setEditAnswerQuillInstance(quill);
     setEditAnswerQuillRange(range);
     setFormulaModalOpen(true);
-  };
+  }, []);
 
   // Handle code button click in edit mode
-  const handleEditCodeClick = (quill, range) => {
+  const handleEditCodeClick = React.useCallback((quill, range) => {
     setEditAnswerQuillInstance(quill);
     setEditAnswerQuillRange(range);
     setCodeModalOpen(true);
-  };
+  }, []);
 
   // Helper function to check if HTML content is empty (used in multiple places)
   // Returns false if there's text content OR images
@@ -242,6 +242,11 @@ const QuestionDetails = () => {
   // Stable onChange handler to prevent ReactQuill from disappearing
   const handleAnswerContentChange = React.useCallback((value) => {
     setAnswerContent(value || '');
+  }, []);
+  
+  // Stable onChange handler for edit answer to prevent editor from disappearing
+  const handleEditAnswerContentChange = React.useCallback((value) => {
+    setEditAnswerContent(value || '');
   }, []);
 
   useEffect(() => {
@@ -464,7 +469,9 @@ const QuestionDetails = () => {
     const answer = question.answers.find(a => a._id === answerId);
     if (answer) {
       setEditingAnswerId(answerId);
-      setEditAnswerContent(answer.content);
+      // Ensure content is set - handle both string and HTML content
+      const content = answer.content || '';
+      setEditAnswerContent(content);
     }
   };
 
@@ -915,18 +922,19 @@ const QuestionDetails = () => {
                       </div>
                       
                       {editingAnswerId === answer._id ? (
-                        // Edit mode
+                        // Edit mode - ensure editor doesn't disappear when typing
                         <div className="mb-4">
                           <ReactQuill
-                            key={`edit-answer-${answer._id}`}
+                            key={`edit-answer-${editingAnswerId}`}
                             theme="snow"
                             value={editAnswerContent}
-                            onChange={(value) => setEditAnswerContent(value || '')}
+                            onChange={handleEditAnswerContentChange}
                             modules={editQuillModules}
                             formats={quillFormats}
                             placeholder="Edit your answer..."
                             className="bg-white dark:bg-gray-700 rounded-lg"
                             style={{ minHeight: '200px' }}
+                            preserveWhitespace={true}
                           />
                           <div className="flex items-center justify-end gap-3 mt-4">
                             <button
