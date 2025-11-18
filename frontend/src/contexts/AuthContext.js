@@ -96,6 +96,14 @@ export const AuthProvider = ({ children }) => {
       toast.success('Login successful!');
       return { success: true };
     } catch (error) {
+      // Handle validation errors from express-validator
+      if (error.response?.data?.errors && Array.isArray(error.response.data.errors)) {
+        const validationMessage = error.response.data.errors[0]?.msg || 'Validation failed';
+        toast.error(validationMessage);
+        return { success: false, error: validationMessage };
+      }
+      
+      // Handle regular error messages
       const message = error.response?.data?.message || 'Login failed';
       toast.error(message);
       return { success: false, error: message };
@@ -121,6 +129,14 @@ export const AuthProvider = ({ children }) => {
       toast.success('Registration successful!');
       return { success: true };
     } catch (error) {
+      // Handle validation errors from express-validator
+      if (error.response?.data?.errors && Array.isArray(error.response.data.errors)) {
+        const validationMessage = error.response.data.errors[0]?.msg || 'Validation failed';
+        toast.error(validationMessage);
+        return { success: false, error: validationMessage };
+      }
+      
+      // Handle regular error messages
       const message = error.response?.data?.message || 'Registration failed';
       toast.error(message);
       return { success: false, error: message };
