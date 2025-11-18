@@ -175,12 +175,20 @@ router.get('/:id', async (req, res) => {
 router.post('/', auth, [
   body('title').isLength({ min: 10, max: 200 }).withMessage('Title must be between 10 and 200 characters'),
   body('description')
-    .notEmpty().withMessage('Description is required')
+    .notEmpty().withMessage('Description is required (or upload an image)')
     .custom((value) => {
+      // Check if image is present
+      const hasImage = value && value.includes('<img');
+      
+      // If image is present, description is optional
+      if (hasImage) {
+        return true;
+      }
+      
       // Remove HTML tags and check minimum text content length
       const textContent = value.replace(/<[^>]*>/g, '').trim();
       if (textContent.length < 20) {
-        throw new Error('Description must contain at least 20 characters of text (excluding HTML tags)');
+        throw new Error('Description must contain at least 20 characters of text (excluding HTML tags) or upload an image');
       }
       // No maximum length restriction - removed as per user request
       return true;
@@ -267,10 +275,18 @@ router.put('/:id', auth, [
   body('title').optional().isLength({ min: 10, max: 200 }),
   body('description').optional().custom((value) => {
     if (value) {
+      // Check if image is present
+      const hasImage = value.includes('<img');
+      
+      // If image is present, description is optional
+      if (hasImage) {
+        return true;
+      }
+      
       // Remove HTML tags and check minimum text content length
       const textContent = value.replace(/<[^>]*>/g, '').trim();
       if (textContent.length < 20) {
-        throw new Error('Description must contain at least 20 characters of text (excluding HTML tags)');
+        throw new Error('Description must contain at least 20 characters of text (excluding HTML tags) or upload an image');
       }
       // No maximum length restriction - removed as per user request
     }

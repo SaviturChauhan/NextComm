@@ -57,18 +57,18 @@ const QuestionDetails = () => {
   });
 
   // Handle formula button click
-  const handleFormulaClick = (quill, range) => {
+  const handleFormulaClick = React.useCallback((quill, range) => {
     setAnswerQuillInstance(quill);
     setAnswerQuillRange(range);
     setFormulaModalOpen(true);
-  };
+  }, []);
 
   // Handle code button click
-  const handleCodeClick = (quill, range) => {
+  const handleCodeClick = React.useCallback((quill, range) => {
     setAnswerQuillInstance(quill);
     setAnswerQuillRange(range);
     setCodeModalOpen(true);
-  };
+  }, []);
 
   // Handle formula button click in edit mode
   const handleEditFormulaClick = (quill, range) => {
@@ -85,8 +85,11 @@ const QuestionDetails = () => {
   };
 
   // Helper function to check if HTML content is empty (used in multiple places)
+  // Returns false if there's text content OR images
   const isHtmlEmpty = React.useCallback((html) => {
     if (!html) return true;
+    // Check for images first
+    if (html.includes('<img')) return false;
     // Remove HTML tags and check if there's actual content
     const textContent = html.replace(/<[^>]*>/g, '').trim();
     return textContent.length === 0;
@@ -235,6 +238,11 @@ const QuestionDetails = () => {
 
   // Answer form ReactQuill ref (simplified like question form)
   const answerQuillRef = useRef(null);
+  
+  // Stable onChange handler to prevent ReactQuill from disappearing
+  const handleAnswerContentChange = React.useCallback((value) => {
+    setAnswerContent(value || '');
+  }, []);
 
   useEffect(() => {
     fetchQuestion();
@@ -317,14 +325,18 @@ const QuestionDetails = () => {
 
   const handleSubmitAnswer = async (e) => {
     e.preventDefault();
-    
+
     if (!isAuthenticated) {
       toast.error('Please log in to answer');
       return;
     }
 
-    if (isHtmlEmpty(answerContent)) {
-      toast.error('Please enter an answer');
+    // Allow submission if there's an image, even without text
+    const hasImage = answerContent && answerContent.includes('<img');
+    const hasText = answerContent && answerContent.replace(/<[^>]*>/g, '').trim().length > 0;
+    
+    if (!hasImage && !hasText) {
+      toast.error('Please enter an answer or upload an image');
       return;
     }
 
@@ -1065,10 +1077,11 @@ const QuestionDetails = () => {
               <form onSubmit={handleSubmitAnswer}>
                 <div className="mb-4 quill-wrapper">
                   <ReactQuill
+                    key="answer-editor"
                     ref={answerQuillRef}
                     theme="snow"
                     value={answerContent}
-                    onChange={(value) => setAnswerContent(value || '')}
+                    onChange={handleAnswerContentChange}
                     modules={quillModules}
                     formats={quillFormats}
                     placeholder="Write your answer here. Click to start typing..."
@@ -1079,7 +1092,7 @@ const QuestionDetails = () => {
                 <div className="flex justify-end gap-3">
                   <button
                     type="submit"
-                    disabled={submittingAnswer || isHtmlEmpty(answerContent)}
+                    disabled={submittingAnswer || (!answerContent || (answerContent.replace(/<[^>]*>/g, '').trim().length === 0 && !answerContent.includes('<img')))}
                     className="px-6 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                   >
                     {submittingAnswer ? 'Posting...' : 'Post Answer'}

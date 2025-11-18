@@ -261,8 +261,11 @@ const AskQuestion = () => {
   };
 
   // Helper function to check if HTML content is empty
+  // Returns false if there's text content OR images
   const isHtmlEmpty = (html) => {
     if (!html) return true;
+    // Check for images first
+    if (html.includes('<img')) return false;
     // Remove HTML tags and check if there's actual content
     const textContent = html.replace(/<[^>]*>/g, '').trim();
     return textContent.length === 0;
@@ -288,11 +291,15 @@ const AskQuestion = () => {
     }
 
     // Check description - handle HTML content from ReactQuill
+    // Allow empty description if image is present
+    const hasImage = formData.description && formData.description.includes('<img');
     const descriptionTextLength = getHtmlTextLength(formData.description);
-    if (isHtmlEmpty(formData.description)) {
-      newErrors.description = 'Description is required';
-    } else if (descriptionTextLength < 20) {
-      newErrors.description = 'Description must be at least 20 characters';
+    
+    if (isHtmlEmpty(formData.description) && !hasImage) {
+      newErrors.description = 'Description is required (or upload an image)';
+    } else if (!hasImage && descriptionTextLength < 20) {
+      // Only require 20 characters if no image is present
+      newErrors.description = 'Description must be at least 20 characters (or upload an image)';
     }
     // No maximum length restriction - removed as per user request
 
@@ -319,10 +326,12 @@ const AskQuestion = () => {
       
       const tagsArray = formData.tags.split(',').map(tag => tag.trim()).filter(tag => tag);
       
-      // Ensure description is not empty HTML
+      // Ensure description is not empty HTML (unless image is present)
+      const hasImage = formData.description && formData.description.includes('<img');
       const descriptionTextLength = getHtmlTextLength(formData.description);
-      if (isHtmlEmpty(formData.description) || descriptionTextLength < 20) {
-        toast.error('Please provide a valid description (at least 20 characters)');
+      
+      if (!hasImage && (isHtmlEmpty(formData.description) || descriptionTextLength < 20)) {
+        toast.error('Please provide a valid description (at least 20 characters) or upload an image');
         return;
       }
 

@@ -10,7 +10,25 @@ const router = express.Router();
 
 // Create new answer
 router.post('/', auth, [
-  body('content').isLength({ min: 10, max: 10000 }).withMessage('Answer must be between 10 and 10000 characters'),
+  body('content')
+    .notEmpty().withMessage('Answer is required (or upload an image)')
+    .custom((value) => {
+      // Check if image is present
+      const hasImage = value && value.includes('<img');
+      
+      // If image is present, content is optional
+      if (hasImage) {
+        return true;
+      }
+      
+      // Remove HTML tags and check minimum text content length
+      const textContent = value.replace(/<[^>]*>/g, '').trim();
+      if (textContent.length < 10) {
+        throw new Error('Answer must contain at least 10 characters of text (excluding HTML tags) or upload an image');
+      }
+      // No maximum length restriction - removed as per user request
+      return true;
+    }),
   body('questionId').isMongoId().withMessage('Valid question ID is required')
 ], async (req, res) => {
   try {
