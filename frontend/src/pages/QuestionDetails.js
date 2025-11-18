@@ -233,100 +233,8 @@ const QuestionDetails = () => {
     }
   };
 
-  // Custom paste handler ref
-  const quillRef = useRef(null);
-
-  // Setup text-change listener to preserve content when images are inserted
-  useEffect(() => {
-    let cleanup = null;
-    const timer = setTimeout(() => {
-      if (quillRef.current) {
-        const quill = quillRef.current.getEditor();
-        
-        // Listen for text changes to ensure content is preserved (especially for images)
-        const handleTextChange = () => {
-          const html = quill.root.innerHTML;
-          // Update state with current HTML content
-          // This ensures images and other content are preserved
-          setAnswerContent(prev => {
-            // Only update if content actually changed
-            if (html !== prev) {
-              return html;
-            }
-            return prev;
-          });
-        };
-        
-        quill.on('text-change', handleTextChange);
-        
-        cleanup = () => {
-          quill.off('text-change', handleTextChange);
-        };
-      }
-    }, 100); // Small delay to ensure Quill is fully initialized
-    
-    return () => {
-      clearTimeout(timer);
-      if (cleanup) cleanup();
-    };
-  }, []); // Run once on mount
-      
-  useEffect(() => {
-    if (quillRef.current) {
-      const quill = quillRef.current.getEditor();
-      
-      // Custom paste handler to preserve LaTeX formulas
-      quill.clipboard.addMatcher(Node.TEXT_NODE, (node, delta) => {
-        const text = node.data;
-        
-        // If text contains LaTeX formulas, preserve them
-        if (text && text.includes('$')) {
-          return delta;
-        }
-        
-        return delta;
-      });
-      
-      // Also handle HTML paste
-      quill.clipboard.addMatcher(Node.ELEMENT_NODE, (node, delta) => {
-        if (node.tagName === 'P' || node.tagName === 'DIV') {
-          const text = node.textContent || '';
-          if (text.includes('$')) {
-            return delta;
-          }
-        }
-        return delta;
-      });
-
-      // Highlight code blocks on content change
-      const highlightCodeBlocks = () => {
-        const editor = quill.root;
-        const codeBlocks = editor.querySelectorAll('pre.ql-syntax, pre code');
-        codeBlocks.forEach((block) => {
-          const code = block.textContent || '';
-          const lang = block.getAttribute('data-language') || 
-                      block.className.match(/language-(\w+)/)?.[1] || 
-                      'plaintext';
-          
-          if (hljs.getLanguage(lang)) {
-            try {
-              const highlighted = hljs.highlight(code, { language: lang });
-              block.innerHTML = highlighted.value;
-              block.classList.add('hljs');
-              block.classList.add(`language-${lang}`);
-            } catch (e) {
-              // Keep original if highlighting fails
-            }
-          }
-        });
-      };
-
-      // Highlight on text change
-      quill.on('text-change', () => {
-        setTimeout(highlightCodeBlocks, 100);
-      });
-    }
-  }, []);
+  // Answer form ReactQuill ref (simplified like question form)
+  const answerQuillRef = useRef(null);
 
   useEffect(() => {
     fetchQuestion();
@@ -1157,13 +1065,10 @@ const QuestionDetails = () => {
               <form onSubmit={handleSubmitAnswer}>
                 <div className="mb-4 quill-wrapper">
                   <ReactQuill
-                    ref={quillRef}
+                    ref={answerQuillRef}
                     theme="snow"
                     value={answerContent}
-                    onChange={(content) => {
-                      // Always update content to preserve images and formatting
-                      setAnswerContent(content || '');
-                    }}
+                    onChange={(value) => setAnswerContent(value || '')}
                     modules={quillModules}
                     formats={quillFormats}
                     placeholder="Write your answer here. Click to start typing..."

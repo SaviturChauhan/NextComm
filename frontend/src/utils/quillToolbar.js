@@ -81,13 +81,7 @@ export const createQuillModules = (onFormulaClick, onCodeClick, onImageUpload) =
             const file = input.files[0];
             if (!file) return;
 
-            // Check file size (5MB max)
-            if (file.size > 5 * 1024 * 1024) {
-              alert('Image size must be less than 5MB');
-              return;
-            }
-
-            // Check file type
+            // Only accept image files
             if (!file.type.startsWith('image/')) {
               alert('Please select an image file');
               return;

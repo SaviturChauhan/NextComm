@@ -176,16 +176,13 @@ router.post('/', auth, [
   body('title').isLength({ min: 10, max: 200 }).withMessage('Title must be between 10 and 200 characters'),
   body('description')
     .notEmpty().withMessage('Description is required')
-    .isLength({ min: 20, max: 20000 }).withMessage('Description HTML must be between 20 and 20000 characters (includes images)')
     .custom((value) => {
-      // Remove HTML tags and check text content length
+      // Remove HTML tags and check minimum text content length
       const textContent = value.replace(/<[^>]*>/g, '').trim();
       if (textContent.length < 20) {
         throw new Error('Description must contain at least 20 characters of text (excluding HTML tags)');
       }
-      if (textContent.length > 15000) {
-        throw new Error('Description text content must be less than 15000 characters (excluding HTML tags and image URLs)');
-      }
+      // No maximum length restriction - removed as per user request
       return true;
     }),
   body('tags').isArray({ min: 1, max: 5 }).withMessage('Must provide 1-5 tags'),
@@ -268,7 +265,17 @@ router.post('/', auth, [
 // Update question
 router.put('/:id', auth, [
   body('title').optional().isLength({ min: 10, max: 200 }),
-  body('description').optional().isLength({ min: 20, max: 15000 }),
+  body('description').optional().custom((value) => {
+    if (value) {
+      // Remove HTML tags and check minimum text content length
+      const textContent = value.replace(/<[^>]*>/g, '').trim();
+      if (textContent.length < 20) {
+        throw new Error('Description must contain at least 20 characters of text (excluding HTML tags)');
+      }
+      // No maximum length restriction - removed as per user request
+    }
+    return true;
+  }),
   body('tags').optional().isArray({ min: 1, max: 5 })
 ], async (req, res) => {
   try {
