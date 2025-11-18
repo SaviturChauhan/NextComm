@@ -102,21 +102,28 @@ export const createQuillModules = (onFormulaClick, onCodeClick, onImageUpload) =
                 } else {
                   // Remove loading text on error
                   this.quill.deleteText(range.index, 20);
+                  // Error message is already shown by onImageUpload handler
                 }
               } else {
                 // Fallback: use default image handler (base64)
+                console.warn('Image upload handler not provided, using base64 fallback');
                 const reader = new FileReader();
                 reader.onload = (e) => {
                   this.quill.deleteText(range.index, 20);
                   this.quill.insertEmbed(range.index, 'image', e.target.result);
                   this.quill.setSelection(range.index + 1);
                 };
+                reader.onerror = () => {
+                  this.quill.deleteText(range.index, 20);
+                  alert('Failed to read image file. Please try again.');
+                };
                 reader.readAsDataURL(file);
               }
             } catch (error) {
               console.error('Error uploading image:', error);
               this.quill.deleteText(range.index, 20);
-              alert('Failed to upload image. Please try again.');
+              const errorMessage = error.message || 'Failed to upload image. Please try again.';
+              alert(errorMessage);
             }
           };
         }
