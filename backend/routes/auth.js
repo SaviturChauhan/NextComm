@@ -93,30 +93,61 @@ router.post('/register', [
 
 // Login
 router.post('/login', [
+  // Log incoming request for debugging
+  (req, res, next) => {
+    console.log('=== LOGIN REQUEST ===');
+    console.log('Method:', req.method);
+    console.log('URL:', req.url);
+    console.log('Body:', JSON.stringify(req.body, null, 2));
+    console.log('Content-Type:', req.headers['content-type']);
+    console.log('Email:', req.body?.email, 'Type:', typeof req.body?.email);
+    console.log('Password:', req.body?.password ? '***' : 'undefined', 'Type:', typeof req.body?.password);
+    
+    // Ensure body is an object
+    if (!req.body || typeof req.body !== 'object') {
+      console.error('ERROR: Request body is not an object!');
+      return res.status(400).json({ 
+        message: 'Invalid request format',
+        errors: [{ msg: 'Request body must be a valid JSON object', param: 'body' }]
+      });
+    }
+    
+    next();
+  },
   body('email')
+    .exists().withMessage('Email is required')
+    .notEmpty().withMessage('Email cannot be empty')
     .trim()
-    .notEmpty().withMessage('Email is required')
-    .normalizeEmail()
     .isEmail().withMessage('Please provide a valid email'),
   body('password')
-    .notEmpty().withMessage('Password is required')
+    .exists().withMessage('Password is required')
+    .notEmpty().withMessage('Password cannot be empty')
 ], async (req, res) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
+      console.log('=== VALIDATION FAILED ===');
       console.log('Validation errors:', errors.array());
-      console.log('Request body:', req.body);
+      console.log('Request body:', JSON.stringify(req.body, null, 2));
+      console.log('Request headers:', req.headers['content-type']);
       return res.status(400).json({ 
         message: errors.array()[0]?.msg || 'Validation failed',
         errors: errors.array() 
       });
     }
 
+    // Get and normalize email/password from request body
     let { email, password } = req.body;
     
-    // Normalize email (trim whitespace and convert to lowercase)
-    // express-validator's normalizeEmail() validates but may not modify req.body
-    email = email.trim().toLowerCase();
+    // Normalize email (trim and lowercase) - do this manually after validation
+    if (email) {
+      email = email.trim().toLowerCase();
+    }
+    
+    // Trim password
+    if (password) {
+      password = password.trim();
+    }
 
     // Check if user exists
     const user = await User.findOne({ email });
