@@ -83,7 +83,20 @@ app.use('/api/notifications', require('./routes/notifications'));
 app.use('/api/ai', require('./routes/ai'));
 app.use('/api/bookmarks', require('./routes/bookmarks'));
 app.use('/api/unanswered', require('./routes/unanswered'));
-app.use('/api/upload', require('./routes/upload'));
+// Upload route (only load if Cloudinary is configured or gracefully handle errors)
+try {
+  app.use('/api/upload', require('./routes/upload'));
+} catch (error) {
+  console.error('⚠️  Warning: Upload route failed to load:', error.message);
+  console.warn('   Image upload functionality will be disabled.');
+  // Add a placeholder route to prevent 404s
+  app.use('/api/upload', (req, res) => {
+    res.status(503).json({ 
+      message: 'Image upload is not available',
+      error: 'Upload service is not configured'
+    });
+  });
+}
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
