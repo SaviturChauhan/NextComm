@@ -293,8 +293,12 @@ const AskQuestion = () => {
       newErrors.description = 'Description is required';
     } else if (descriptionTextLength < 20) {
       newErrors.description = 'Description must be at least 20 characters';
-    } else if (formData.description.length > 15000) {
-      newErrors.description = 'Description must be less than 15000 characters';
+    } else if (formData.description.length > 20000) {
+      // Check HTML length (includes image URLs) - allow up to 20000 chars for HTML
+      newErrors.description = 'Description is too long. Please reduce the content or remove some images.';
+    } else if (descriptionTextLength > 15000) {
+      // Check text content length - max 15000 characters of actual text
+      newErrors.description = 'Description text is too long. Maximum 15000 characters of text allowed.';
     }
 
     const tagsArray = formData.tags.split(',').map(tag => tag.trim()).filter(tag => tag);

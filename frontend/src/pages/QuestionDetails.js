@@ -236,7 +236,41 @@ const QuestionDetails = () => {
   // Custom paste handler ref
   const quillRef = useRef(null);
 
-  // Setup paste handler and syntax highlighting after Quill is initialized
+  // Setup text-change listener to preserve content when images are inserted
+  useEffect(() => {
+    let cleanup = null;
+    const timer = setTimeout(() => {
+      if (quillRef.current) {
+        const quill = quillRef.current.getEditor();
+        
+        // Listen for text changes to ensure content is preserved (especially for images)
+        const handleTextChange = () => {
+          const html = quill.root.innerHTML;
+          // Update state with current HTML content
+          // This ensures images and other content are preserved
+          setAnswerContent(prev => {
+            // Only update if content actually changed
+            if (html !== prev) {
+              return html;
+            }
+            return prev;
+          });
+        };
+        
+        quill.on('text-change', handleTextChange);
+        
+        cleanup = () => {
+          quill.off('text-change', handleTextChange);
+        };
+      }
+    }, 100); // Small delay to ensure Quill is fully initialized
+    
+    return () => {
+      clearTimeout(timer);
+      if (cleanup) cleanup();
+    };
+  }, []); // Run once on mount
+      
   useEffect(() => {
     if (quillRef.current) {
       const quill = quillRef.current.getEditor();
@@ -1126,7 +1160,10 @@ const QuestionDetails = () => {
                     ref={quillRef}
                     theme="snow"
                     value={answerContent}
-                    onChange={setAnswerContent}
+                    onChange={(content) => {
+                      // Always update content to preserve images and formatting
+                      setAnswerContent(content || '');
+                    }}
                     modules={quillModules}
                     formats={quillFormats}
                     placeholder="Write your answer here. Click to start typing..."
