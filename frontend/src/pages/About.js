@@ -193,7 +193,7 @@ const About = () => {
           {/* Additional Info */}
           <div className="mt-12 text-center">
             <p className="text-gray-500 dark:text-gray-400 text-sm">
-              Ready to get started? <Link to="/register" className="text-primary hover:underline font-medium">Sign up</Link> or <Link to="/login" className="text-primary hover:underline font-medium">log in</Link> to join the conversation.
+              Ready to get started? <Link to="/login" className="text-primary hover:underline font-medium">Sign in with Google</Link> to join the conversation.
             </p>
           </div>
         </div>

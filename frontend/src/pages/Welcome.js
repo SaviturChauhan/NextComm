@@ -59,7 +59,7 @@ const Welcome = () => {
       description: "Get help with wireless communication concepts from experts and peers.",
       color: "from-blue-500 to-cyan-500",
       bgColor: "bg-blue-50 dark:bg-blue-900/20",
-      link: isAuthenticated ? "/ask" : "/register"
+      link: isAuthenticated ? "/ask" : "/login"
     },
     {
       icon: <FiUsers className="w-10 h-10" />,
@@ -67,7 +67,7 @@ const Welcome = () => {
       description: "Connect with fellow students and professionals in the field.",
       color: "from-purple-500 to-pink-500",
       bgColor: "bg-purple-50 dark:bg-purple-900/20",
-      link: isAuthenticated ? "/dashboard" : "/register"
+      link: isAuthenticated ? "/dashboard" : "/login"
     },
     {
       icon: <FiAward className="w-10 h-10" />,
@@ -83,7 +83,7 @@ const Welcome = () => {
       description: "Get instant answers to your wireless communication questions.",
       color: "from-green-500 to-emerald-500",
       bgColor: "bg-green-50 dark:bg-green-900/20",
-      link: isAuthenticated ? "/dashboard" : "/register"
+      link: isAuthenticated ? "/dashboard" : "/login"
     }
   ];
 
@@ -145,7 +145,7 @@ const Welcome = () => {
               ) : (
                 <>
                   <Link
-                    to="/register"
+                    to="/login"
                     className="group inline-flex items-center justify-center gap-2 h-14 px-8 bg-white text-primary rounded-xl font-bold text-lg shadow-2xl hover:shadow-white/20 transition-all duration-300 hover:scale-105"
                   >
                     Get Started Free

@@ -19,194 +19,20 @@ const getFrontendUrl = () => {
   return frontendUrl;
 };
 
-// Register
-router.post('/register', [
-  body('username').isLength({ min: 3 }).withMessage('Username must be at least 3 characters'),
-  body('email').isEmail().withMessage('Please provide a valid email'),
-  body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters')
-], async (req, res) => {
-  try {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ 
-        message: errors.array()[0]?.msg || 'Validation failed',
-        errors: errors.array() 
-      });
-    }
-
-    const { username, email, password } = req.body;
-
-    // Check if user already exists
-    let user = await User.findOne({ $or: [{ email }, { username }] });
-    if (user) {
-      return res.status(400).json({ message: 'User already exists' });
-    }
-
-    // Create new user
-    user = new User({ username, email, password });
-    await user.save();
-
-    // Generate JWT - check JWT_SECRET first
-    if (!process.env.JWT_SECRET) {
-      console.error('❌ JWT_SECRET is not set! Cannot generate token.');
-      return res.status(500).json({ message: 'Server configuration error: JWT_SECRET not set' });
-    }
-    
-    const payload = { userId: user._id };
-    const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '7d' });
-
-    res.status(201).json({
-      token,
-      user: {
-        id: user._id,
-        username: user.username,
-        email: user.email,
-        points: user.points,
-        badges: user.badges,
-        role: user.role
-      }
-    });
-  } catch (error) {
-    console.error('❌ Registration error:', error);
-    console.error('Error stack:', error.stack);
-    console.error('Error name:', error.name);
-    console.error('Error message:', error.message);
-    
-    // More specific error messages
-    if (error.name === 'ValidationError') {
-      return res.status(400).json({ message: 'Validation error', errors: Object.values(error.errors) });
-    }
-    if (error.code === 11000) {
-      return res.status(400).json({ message: 'User already exists' });
-    }
-    if (!process.env.JWT_SECRET) {
-      console.error('❌ JWT_SECRET is not set!');
-      return res.status(500).json({ message: 'Server configuration error' });
-    }
-    
-    res.status(500).json({ 
-      message: 'Server error',
-      error: process.env.NODE_ENV === 'development' ? error.message : undefined
-    });
-  }
+// Register - DISABLED: Only Google OAuth registration is allowed
+router.post('/register', (req, res) => {
+  return res.status(403).json({ 
+    message: 'Email/password registration is disabled. Please use Google Sign-In to create an account.',
+    errors: [{ msg: 'Only Google OAuth registration is allowed', param: 'auth' }]
+  });
 });
 
-// Login
-router.post('/login', [
-  // Log incoming request for debugging
-  (req, res, next) => {
-    console.log('=== LOGIN REQUEST ===');
-    console.log('Method:', req.method);
-    console.log('URL:', req.url);
-    console.log('Body:', JSON.stringify(req.body, null, 2));
-    console.log('Content-Type:', req.headers['content-type']);
-    console.log('Email:', req.body?.email, 'Type:', typeof req.body?.email);
-    console.log('Password:', req.body?.password ? '***' : 'undefined', 'Type:', typeof req.body?.password);
-    
-    // Ensure body is an object
-    if (!req.body || typeof req.body !== 'object') {
-      console.error('ERROR: Request body is not an object!');
-      return res.status(400).json({ 
-        message: 'Invalid request format',
-        errors: [{ msg: 'Request body must be a valid JSON object', param: 'body' }]
-      });
-    }
-    
-    next();
-  },
-  body('email')
-    .exists().withMessage('Email is required')
-    .notEmpty().withMessage('Email cannot be empty')
-    .trim()
-    .isEmail().withMessage('Please provide a valid email'),
-  body('password')
-    .exists().withMessage('Password is required')
-    .notEmpty().withMessage('Password cannot be empty')
-], async (req, res) => {
-  try {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      console.log('=== VALIDATION FAILED ===');
-      console.log('Validation errors:', errors.array());
-      console.log('Request body:', JSON.stringify(req.body, null, 2));
-      console.log('Request headers:', req.headers['content-type']);
-      return res.status(400).json({ 
-        message: errors.array()[0]?.msg || 'Validation failed',
-        errors: errors.array() 
-      });
-    }
-
-    // Get and normalize email/password from request body
-    let { email, password } = req.body;
-    
-    // Normalize email (trim and lowercase) - do this manually after validation
-    if (email) {
-      email = email.trim().toLowerCase();
-    }
-    
-    // Trim password
-    if (password) {
-      password = password.trim();
-    }
-
-    // Check if user exists
-    const user = await User.findOne({ email });
-    if (!user) {
-      return res.status(400).json({ message: 'Invalid credentials' });
-    }
-
-    // Check password
-    // If user is OAuth-only (no password), they can't login with email/password
-    if (!user.password || user.authProvider === 'google') {
-      return res.status(400).json({ message: 'This account uses Google Sign-In. Please use Google to sign in.' });
-    }
-    
-    const isMatch = await user.comparePassword(password);
-    if (!isMatch) {
-      return res.status(400).json({ message: 'Invalid credentials' });
-    }
-
-    // Update last active
-    await user.updateLastActive();
-
-    // Generate JWT - check JWT_SECRET first
-    if (!process.env.JWT_SECRET) {
-      console.error('❌ JWT_SECRET is not set! Cannot generate token.');
-      return res.status(500).json({ message: 'Server configuration error: JWT_SECRET not set' });
-    }
-    
-    const payload = { userId: user._id };
-    const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '7d' });
-
-    res.json({
-      token,
-      user: {
-        id: user._id,
-        username: user.username,
-        email: user.email,
-        points: user.points,
-        badges: user.badges,
-        avatar: user.avatar,
-        role: user.role
-      }
-    });
-  } catch (error) {
-    console.error('❌ Login error:', error);
-    console.error('Error stack:', error.stack);
-    console.error('Error name:', error.name);
-    console.error('Error message:', error.message);
-    
-    // More specific error messages
-    if (!process.env.JWT_SECRET) {
-      console.error('❌ JWT_SECRET is not set!');
-      return res.status(500).json({ message: 'Server configuration error' });
-    }
-    
-    res.status(500).json({ 
-      message: 'Server error',
-      error: process.env.NODE_ENV === 'development' ? error.message : undefined
-    });
-  }
+// Login - DISABLED: Only Google OAuth is allowed
+router.post('/login', (req, res) => {
+  return res.status(403).json({ 
+    message: 'Email/password login is disabled. Please use Google Sign-In.',
+    errors: [{ msg: 'Only Google OAuth authentication is allowed', param: 'auth' }]
+  });
 });
 
 // Get current user

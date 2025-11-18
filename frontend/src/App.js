@@ -13,7 +13,6 @@ import Leaderboard from './pages/Leaderboard';
 import UserProfile from './pages/UserProfile';
 import PointsGuide from './pages/PointsGuide';
 import Login from './pages/Login';
-import Register from './pages/Register';
 import GoogleCallback from './pages/GoogleCallback';
 import AdminDashboard from './pages/AdminDashboard';
 import About from './pages/About';
@@ -33,7 +32,6 @@ function App() {
                 <Route path="/" element={<Welcome />} />
                 <Route path="/about" element={<About />} />
                 <Route path="/login" element={<Login />} />
-                <Route path="/register" element={<Register />} />
                 <Route path="/auth/google/callback" element={<GoogleCallback />} />
                 <Route path="/dashboard" element={
                   <ProtectedRoute>
