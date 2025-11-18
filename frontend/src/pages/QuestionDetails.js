@@ -728,13 +728,14 @@ const QuestionDetails = () => {
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="max-w-4xl mx-auto">
           {/* Back Button */}
-            <div className="flex items-center justify-between mb-6">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-3">
               <button
                 onClick={() => navigate('/dashboard')}
-                className="flex items-center gap-2 text-gray-600 dark:text-gray-300 hover:text-primary transition-colors"
+                className="flex items-center gap-2 text-gray-600 dark:text-gray-300 hover:text-primary transition-colors text-sm sm:text-base"
               >
                 <FiArrowLeft className="h-4 w-4" />
-                Back to Questions
+                <span className="hidden sm:inline">Back to Questions</span>
+                <span className="sm:hidden">Back</span>
               </button>
 
               {/* Delete Question Button - Only visible to question author */}
@@ -743,17 +744,18 @@ const QuestionDetails = () => {
                (String(question.author._id) === String(user?.id || user?._id)) && (
                 <button
                   onClick={handleDeleteQuestion}
-                  className="flex items-center gap-2 px-4 py-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors border border-red-300 dark:border-red-800"
+                  className="flex items-center gap-2 px-3 sm:px-4 py-2 text-sm sm:text-base text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors border border-red-300 dark:border-red-800 w-full sm:w-auto justify-center sm:justify-start"
                 >
                   <FiTrash2 className="h-4 w-4" />
-                  Delete Question
+                  <span className="hidden sm:inline">Delete Question</span>
+                  <span className="sm:hidden">Delete</span>
                 </button>
               )}
             </div>
 
           {/* Question */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6 mb-8 overflow-hidden">
-            <div className="flex items-start gap-4">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 sm:p-6 mb-8 overflow-hidden">
+            <div className="flex flex-col sm:flex-row items-start gap-4">
               <div className="flex-shrink-0">
                 <div className="w-12 h-12 bg-primary/10 dark:bg-primary/20 rounded-lg flex items-center justify-center">
                   <FiMessageSquare className="h-6 w-6 text-primary" />
@@ -761,11 +763,11 @@ const QuestionDetails = () => {
               </div>
               
               <div className="flex-1 min-w-0">
-                <div className="flex items-start justify-between mb-4">
-                  <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex-1">
+                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between mb-4 gap-3">
+                  <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white flex-1">
                     {question.title}
                   </h1>
-                  <div className="flex items-center gap-2 ml-4 flex-shrink-0">
+                  <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap sm:ml-4 flex-shrink-0">
                     {isAuthenticated && (
                       <BookmarkButton questionId={question._id} size="md" />
                     )}
@@ -825,7 +827,7 @@ const QuestionDetails = () => {
                 )}
 
                 {/* Voting */}
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2 sm:gap-4 flex-wrap">
                   {(() => {
                     // Find user's vote - handle both ObjectId and populated user object
                     const userVote = question.votes?.voters?.find(v => {
@@ -873,7 +875,7 @@ const QuestionDetails = () => {
 
           {/* Answers */}
           <div className="mb-8">
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white mb-4 sm:mb-6">
               Answers ({question.answers?.length || 0})
             </h2>
             
@@ -881,7 +883,7 @@ const QuestionDetails = () => {
               {question.answers?.map((answer) => (
                 <div
                   key={answer._id}
-                  className={`p-6 rounded-lg border overflow-hidden ${
+                  className={`p-4 sm:p-6 rounded-lg border overflow-hidden ${
                     answer.isAccepted 
                       ? 'border-green-500 bg-green-50 dark:bg-green-900/20' 
                       : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800'
@@ -1072,18 +1074,19 @@ const QuestionDetails = () => {
 
           {/* Answer Form */}
           {isAuthenticated && (
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-              <div className="mb-4 flex items-center justify-between">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 sm:p-6">
+              <div className="mb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white">
                 Your Answer
               </h3>
                   <button
                     type="button"
                     onClick={() => setAiSuggestionModalOpen(true)}
-                    className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg hover:from-purple-600 hover:to-pink-600 transition-all duration-200 font-medium text-sm shadow-md hover:shadow-lg transform hover:scale-105"
+                    className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg hover:from-purple-600 hover:to-pink-600 transition-all duration-200 font-medium text-xs sm:text-sm shadow-md hover:shadow-lg transform hover:scale-105 w-full sm:w-auto"
                   >
                     <FiZap className="w-4 h-4" />
-                    Get AI Suggestion
+                    <span className="hidden sm:inline">Get AI Suggestion</span>
+                    <span className="sm:hidden">AI Suggestion</span>
                   </button>
               </div>
               

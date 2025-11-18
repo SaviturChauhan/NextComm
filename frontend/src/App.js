@@ -18,6 +18,7 @@ import AdminDashboard from './pages/AdminDashboard';
 import About from './pages/About';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import AdminRoute from './components/auth/AdminRoute';
+import ScrollToTop from './components/common/ScrollToTop';
 
 function App() {
   return (
@@ -25,6 +26,7 @@ function App() {
       <AuthProvider>
         <NotificationProvider>
           <Router>
+          <ScrollToTop />
           <div className="min-h-screen bg-background-light dark:bg-background-dark font-display">
             <Navbar />
             <main className="flex-1">

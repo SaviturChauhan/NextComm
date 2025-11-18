@@ -163,12 +163,14 @@ const Dashboard = () => {
               </div>
             </form>
 
-            <div className="flex flex-wrap gap-4">
+            <div className="flex flex-col sm:flex-row flex-wrap gap-4">
               {questionType === 'all' && (
-                <div className="flex items-center gap-2">
-                  <FiFilter className="h-4 w-4 text-gray-500 dark:text-gray-400" />
-                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Sort by:</span>
-                  <div className="w-40">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 w-full sm:w-auto">
+                  <div className="flex items-center gap-2">
+                    <FiFilter className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Sort by:</span>
+                  </div>
+                  <div className="w-full sm:w-40">
                     <CustomSelect
                       value={filters.sortBy}
                       onChange={(value) => handleFilterChange('sortBy', value)}
@@ -183,9 +185,9 @@ const Dashboard = () => {
                 </div>
               )}
 
-              <div className="flex items-center gap-2">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 w-full sm:w-auto">
                 <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Category:</span>
-                <div className="w-56">
+                <div className="w-full sm:w-56">
                   <CustomSelect
                     value={filters.category === 'all' ? 'All Categories' : filters.category}
                     onChange={(value) => handleFilterChange('category', value === 'All Categories' ? 'all' : value)}
@@ -203,9 +205,9 @@ const Dashboard = () => {
                 </div>
               </div>
 
-              <div className="flex items-center gap-2">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 w-full sm:w-auto">
                 <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Difficulty:</span>
-                <div className="w-40">
+                <div className="w-full sm:w-40">
                   <CustomSelect
                     value={filters.difficulty === 'all' ? 'All Levels' : filters.difficulty}
                     onChange={(value) => handleFilterChange('difficulty', value === 'All Levels' ? 'all' : value)}
