@@ -75,7 +75,6 @@ const NotificationDropdown = () => {
     setIsOpen(false);
   };
 
-  const unreadNotifications = notifications.filter(n => !n.read);
 
   return (
     <div className="relative" ref={dropdownRef}>

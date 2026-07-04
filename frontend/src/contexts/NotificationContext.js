@@ -1,5 +1,5 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import axios from 'axios';
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
+import axios from '../utils/api';
 import { useAuth } from './AuthContext';
 
 const NotificationContext = createContext();
@@ -9,7 +9,7 @@ export const NotificationProvider = ({ children }) => {
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(false);
-  const [pollingInterval, setPollingInterval] = useState(null);
+  const pollingIntervalRef = useRef(null);
 
   // Fetch notifications
   const fetchNotifications = useCallback(async (showLoading = true) => {
@@ -104,23 +104,23 @@ export const NotificationProvider = ({ children }) => {
       fetchNotifications(true);
 
       // Poll for updates every 30 seconds
-      const interval = setInterval(() => {
+      pollingIntervalRef.current = setInterval(() => {
         fetchUnreadCount();
         // Silently fetch notifications in background
         fetchNotifications(false);
       }, 30000);
 
-      setPollingInterval(interval);
-
       return () => {
-        clearInterval(interval);
+        if (pollingIntervalRef.current) {
+          clearInterval(pollingIntervalRef.current);
+        }
       };
     } else {
       setNotifications([]);
       setUnreadCount(0);
-      if (pollingInterval) {
-        clearInterval(pollingInterval);
-        setPollingInterval(null);
+      if (pollingIntervalRef.current) {
+        clearInterval(pollingIntervalRef.current);
+        pollingIntervalRef.current = null;
       }
     }
   }, [isAuthenticated, token, fetchNotifications, fetchUnreadCount]);

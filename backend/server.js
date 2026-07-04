@@ -11,6 +11,10 @@ const passport = require('./config/passport');
 
 const app = express();
 
+// Trust proxy - required for express-rate-limit to work correctly
+// when behind a reverse proxy (Vercel, Nginx, etc.) or when X-Forwarded-For header is present
+app.set('trust proxy', 1);
+
 // Security middleware
 app.use(helmet());
 

@@ -1,9 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { FiX, FiZap, FiCopy, FiCheck } from 'react-icons/fi';
-import axios from 'axios';
-import ReactQuill from 'react-quill';
-import 'react-quill/dist/quill.snow.css';
-import { quillFormats } from '../../utils/quillToolbar';
+import axios from '../../utils/api';
 
 const AISuggestionModal = ({ isOpen, onClose, onUseSuggestion, questionTitle, questionId }) => {
   const [aiAnswer, setAiAnswer] = useState('');
@@ -18,7 +15,7 @@ const AISuggestionModal = ({ isOpen, onClose, onUseSuggestion, questionTitle, qu
       setAiAnswer('');
       setError('');
     }
-  }, [isOpen, questionId]);
+  }, [isOpen, questionId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (isOpen) {

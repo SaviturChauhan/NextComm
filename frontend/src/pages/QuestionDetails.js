@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import ReactQuill, { Quill } from 'react-quill';
+import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 import { 
   FiThumbsUp, 
@@ -17,7 +17,6 @@ import {
 import axios from '../utils/api';
 import toast from 'react-hot-toast';
 import { useAuth } from '../contexts/AuthContext';
-import { preserveFormulasOnPaste, renderFormulas } from '../utils/formulaHandler';
 import { InlineMath, BlockMath } from 'react-katex';
 import ConfirmModal from '../components/common/ConfirmModal';
 import FormulaModal from '../components/common/FormulaModal';
@@ -84,16 +83,7 @@ const QuestionDetails = () => {
     setCodeModalOpen(true);
   }, []);
 
-  // Helper function to check if HTML content is empty (used in multiple places)
-  // Returns false if there's text content OR images
-  const isHtmlEmpty = React.useCallback((html) => {
-    if (!html) return true;
-    // Check for images first
-    if (html.includes('<img')) return false;
-    // Remove HTML tags and check if there's actual content
-    const textContent = html.replace(/<[^>]*>/g, '').trim();
-    return textContent.length === 0;
-  }, []);
+
 
   // Handle image upload
   const handleImageUpload = React.useCallback(async (file) => {
@@ -251,7 +241,7 @@ const QuestionDetails = () => {
 
   useEffect(() => {
     fetchQuestion();
-  }, [id]);
+  }, [id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const fetchQuestion = async () => {
     try {
@@ -302,7 +292,7 @@ const QuestionDetails = () => {
       // Otherwise, send the vote type (backend will handle switching from upvote to downvote or vice versa)
       const voteType = (currentVote && currentVote.voteType === type) ? 'remove' : type;
       
-      const response = await axios.post(`/api/${targetType}/${targetId}/vote`, {
+      await axios.post(`/api/${targetType}/${targetId}/vote`, {
         voteType: voteType
       });
 
@@ -623,8 +613,9 @@ const QuestionDetails = () => {
       const inlineMatches = [];
       let inlineMatch;
       while ((inlineMatch = inlineFormulaRegex.exec(processedContent)) !== null) {
+        const capturedMatch = inlineMatch;
         const isInsideBlock = blockMatches.some(bm => 
-          inlineMatch.index >= bm.index && inlineMatch.index < bm.index + bm.length
+          capturedMatch.index >= bm.index && capturedMatch.index < bm.index + bm.length
         );
         if (!isInsideBlock) {
           // Clean up the formula
@@ -632,11 +623,11 @@ const QuestionDetails = () => {
           formula = formula.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&');
           
           inlineMatches.push({
-            index: inlineMatch.index,
-            length: inlineMatch[0].length,
+            index: capturedMatch.index,
+            length: capturedMatch[0].length,
             formula: formula,
             isBlock: false,
-            original: inlineMatch[0]
+            original: capturedMatch[0]
           });
         }
       }

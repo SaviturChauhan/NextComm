@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { FiX, FiUpload, FiImage, FiCamera } from 'react-icons/fi';
-import axios from 'axios';
+import axios from '../../utils/api';
 import toast from 'react-hot-toast';
 
 const AvatarEditor = ({ isOpen, onClose, currentAvatar, onSave, userId, username = 'User' }) => {
@@ -12,7 +12,6 @@ const AvatarEditor = ({ isOpen, onClose, currentAvatar, onSave, userId, username
   const getSampleAvatars = () => {
     const encodedName = encodeURIComponent(username);
     const seed = username || 'User';
-    const timestamp = Date.now(); // Add timestamp to ensure variety
     
     return [
       // Professional Letter Avatars (Clean and modern)
@@ -171,7 +170,7 @@ const AvatarEditor = ({ isOpen, onClose, currentAvatar, onSave, userId, username
   const handleRemove = async () => {
     try {
       setUploading(true);
-      const response = await axios.put('/api/auth/profile', {
+      await axios.put('/api/auth/profile', {
         avatar: ''
       });
 

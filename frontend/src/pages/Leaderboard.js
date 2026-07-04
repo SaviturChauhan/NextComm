@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
-import { FiAward, FiUsers, FiMessageSquare, FiClock } from 'react-icons/fi';
-import axios from 'axios';
+import { FiAward, FiUsers, FiMessageSquare } from 'react-icons/fi';
+import axios from '../utils/api';
 
 const Leaderboard = () => {
   const [leaderboard, setLeaderboard] = useState([]);
@@ -15,12 +15,7 @@ const Leaderboard = () => {
     hasPrev: false
   });
 
-  useEffect(() => {
-    fetchLeaderboard();
-    fetchTopUsers();
-  }, [category]);
-
-  const fetchLeaderboard = async (page = 1) => {
+  const fetchLeaderboard = useCallback(async (page = 1) => {
     try {
       setLoading(true);
       const response = await axios.get(`/api/leaderboard/category/${category}?page=${page}&limit=20`);
@@ -31,16 +26,21 @@ const Leaderboard = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [category]);
 
-  const fetchTopUsers = async () => {
+  const fetchTopUsers = useCallback(async () => {
     try {
       const response = await axios.get('/api/leaderboard/top');
       setTopUsers(response.data);
     } catch (error) {
       console.error('Error fetching top users:', error);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    fetchLeaderboard();
+    fetchTopUsers();
+  }, [fetchLeaderboard, fetchTopUsers]);
 
   const handleCategoryChange = (newCategory) => {
     setCategory(newCategory);

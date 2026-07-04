@@ -16,9 +16,13 @@ import Login from './pages/Login';
 import GoogleCallback from './pages/GoogleCallback';
 import AdminDashboard from './pages/AdminDashboard';
 import About from './pages/About';
+import SavedItems from './pages/SavedItems';
+import UnansweredQuestions from './pages/UnansweredQuestions';
+import NoAcceptedAnswer from './pages/NoAcceptedAnswer';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import AdminRoute from './components/auth/AdminRoute';
 import ScrollToTop from './components/common/ScrollToTop';
+import Footer from './components/layout/Footer';
 
 function App() {
   return (
@@ -54,8 +58,16 @@ function App() {
                     <AdminDashboard />
                   </AdminRoute>
                 } />
+                <Route path="/saved" element={
+                  <ProtectedRoute>
+                    <SavedItems />
+                  </ProtectedRoute>
+                } />
+                <Route path="/unanswered" element={<UnansweredQuestions />} />
+                <Route path="/no-accepted-answer" element={<NoAcceptedAnswer />} />
               </Routes>
             </main>
+            <Footer />
             <Toaster
               position="top-center"
               containerStyle={{

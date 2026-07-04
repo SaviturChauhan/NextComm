@@ -1,15 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { FiBookmark, FiFolderPlus, FiEdit3, FiTrash2, FiPlus, FiX } from 'react-icons/fi';
-import axios from 'axios';
+import { FiBookmark, FiFolderPlus, FiTrash2, FiX } from 'react-icons/fi';
+import axios from '../utils/api';
 import toast from 'react-hot-toast';
 import { useAuth } from '../contexts/AuthContext';
 import { renderFormulas } from '../utils/formulaHandler';
-import { InlineMath, BlockMath } from 'react-katex';
-import hljs from 'highlight.js';
 
 const SavedItems = () => {
-  const { isAuthenticated, user } = useAuth();
+  const { isAuthenticated } = useAuth();
   const [bookmarks, setBookmarks] = useState([]);
   const [lists, setLists] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -35,7 +33,7 @@ const SavedItems = () => {
       fetchBookmarks();
       fetchLists();
     }
-  }, [isAuthenticated, selectedList, filter]);
+  }, [isAuthenticated, selectedList, filter]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const fetchBookmarks = async () => {
     try {

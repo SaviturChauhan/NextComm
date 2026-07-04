@@ -11,7 +11,7 @@ import {
   FiCheckCircle
 } from 'react-icons/fi';
 import Footer from '../components/layout/Footer';
-import axios from 'axios';
+import axios from '../utils/api';
 
 const Welcome = () => {
   const { isAuthenticated } = useAuth();

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { FiMessageSquare, FiClock, FiEye, FiTag } from 'react-icons/fi';
-import axios from 'axios';
+import axios from '../utils/api';
 import CustomSelect from '../components/common/CustomSelect';
 
 const UnansweredQuestions = () => {
@@ -17,7 +17,7 @@ const UnansweredQuestions = () => {
 
   useEffect(() => {
     fetchQuestions();
-  }, [page, filters]);
+  }, [page, filters]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const fetchQuestions = async () => {
     try {

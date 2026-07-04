@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { FiSearch, FiFilter, FiPlus, FiClock, FiMessageSquare, FiEye, FiThumbsUp } from 'react-icons/fi';
-import axios from 'axios';
+import axios from '../utils/api';
 import CustomSelect from '../components/common/CustomSelect';
 
 const Dashboard = () => {
@@ -31,7 +31,7 @@ const Dashboard = () => {
 
   useEffect(() => {
     fetchQuestions(1);
-  }, [questionType, filters, searchQuery]);
+  }, [questionType, filters, searchQuery]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const fetchQuestions = async (page = 1) => {
     try {

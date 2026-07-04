@@ -61,14 +61,15 @@ export const AuthProvider = ({ children }) => {
   // Check if user is logged in on app start
   useEffect(() => {
     const checkAuth = async () => {
-      if (state.token) {
+      const token = localStorage.getItem('token');
+      if (token) {
         try {
           const response = await axios.get('/api/auth/me');
           dispatch({
             type: 'LOGIN_SUCCESS',
             payload: {
               user: response.data,
-              token: state.token
+              token: token
             }
           });
         } catch (error) {

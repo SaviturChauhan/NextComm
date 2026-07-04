@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { FiBookmark, FiCheck } from 'react-icons/fi';
-import axios from 'axios';
+import { FiBookmark } from 'react-icons/fi';
+import axios from '../../utils/api';
 import toast from 'react-hot-toast';
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -11,14 +11,13 @@ const BookmarkButton = ({ questionId, answerId, size = 'md', showText = false })
   const [loading, setLoading] = useState(false);
   const [showListModal, setShowListModal] = useState(false);
   const [lists, setLists] = useState([]);
-  const [selectedListId, setSelectedListId] = useState(null);
 
   useEffect(() => {
     if (isAuthenticated && (questionId || answerId)) {
       checkBookmarkStatus();
       fetchLists();
     }
-  }, [isAuthenticated, questionId, answerId]);
+  }, [isAuthenticated, questionId, answerId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const checkBookmarkStatus = async () => {
     try {
@@ -28,7 +27,6 @@ const BookmarkButton = ({ questionId, answerId, size = 'md', showText = false })
       setIsBookmarked(response.data.isBookmarked);
       if (response.data.bookmark) {
         setBookmarkId(response.data.bookmark._id);
-        setSelectedListId(response.data.bookmark.list?._id || null);
       }
     } catch (error) {
       console.error('Error checking bookmark status:', error);
@@ -89,7 +87,6 @@ const BookmarkButton = ({ questionId, answerId, size = 'md', showText = false })
       const bookmark = response.data.bookmark || response.data;
       setIsBookmarked(true);
       setBookmarkId(bookmark._id || bookmark.id);
-      setSelectedListId(listId || null);
       setShowListModal(false);
       toast.success(response.data.message || 'Saved to bookmarks');
     } catch (error) {

@@ -96,8 +96,6 @@ export const createQuillModules = (onFormulaClick, onCodeClick, onImageUpload) =
             }
 
             // Preserve current content by getting the full content
-            const currentContent = quill.getContents();
-            const currentText = quill.getText();
 
             // Show loading indicator
             quill.insertText(currentRange.index, 'Uploading image...', 'user');
@@ -115,8 +113,8 @@ export const createQuillModules = (onFormulaClick, onCodeClick, onImageUpload) =
                   const loadingTextIndex = fullText.indexOf('Uploading image...');
                   
                   if (loadingTextIndex !== -1) {
+                    
                     // Find the actual index in Quill's delta
-                    let actualIndex = 0;
                     const contents = quill.getContents();
                     let textPos = 0;
                     
@@ -124,12 +122,9 @@ export const createQuillModules = (onFormulaClick, onCodeClick, onImageUpload) =
                       const op = contents.ops[i];
                       if (typeof op.insert === 'string') {
                         if (textPos <= loadingTextIndex && loadingTextIndex < textPos + op.insert.length) {
-                          actualIndex = i;
                           break;
                         }
                         textPos += op.insert.length;
-                      } else {
-                        actualIndex += 1;
                       }
                     }
                     

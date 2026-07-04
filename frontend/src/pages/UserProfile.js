@@ -1,12 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { FiMessageSquare, FiClock, FiThumbsUp, FiCheck, FiEdit3, FiTrash2, FiBookmark, FiSave, FiX, FiCamera } from 'react-icons/fi';
-import axios from 'axios';
+import { FiMessageSquare, FiClock, FiThumbsUp, FiCheck, FiEdit3, FiBookmark, FiSave, FiX, FiCamera } from 'react-icons/fi';
+import axios from '../utils/api';
 import toast from 'react-hot-toast';
 import BadgeModal from '../components/common/BadgeModal';
 import AvatarEditor from '../components/common/AvatarEditor';
 import { useAuth } from '../contexts/AuthContext';
-import { renderFormulas } from '../utils/formulaHandler';
 
 const UserProfile = () => {
   const { id } = useParams();
@@ -27,13 +26,13 @@ const UserProfile = () => {
 
   useEffect(() => {
     fetchProfile();
-  }, [id]);
+  }, [id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (isOwnProfile) {
       fetchBookmarks();
     }
-  }, [isOwnProfile]);
+  }, [isOwnProfile]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const fetchProfile = async () => {
     try {
